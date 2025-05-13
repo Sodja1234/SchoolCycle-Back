@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Validator;
 
 class RegisteredUserController extends Controller
 {
@@ -18,24 +20,51 @@ class RegisteredUserController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request): Response
+    public function store(Request $request): JsonResponse
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+        try {
+            //validation des données
+            $validator = Validator::make($request->all(), [
+                'name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'string', 'lowercase', 'email:rfc', 'max:255', 'unique:'.User::class],
+                'password' => ['required', 'confirmed', Rules\Password::defaults()],
+                'role' => 'in:admin,tutor'
+            ]);
+            
+            //recuperation des erreurs
+            if ($validator->fails()) {
+                return response()->json([
+                    'errors' => $validator->errors()
+                ], 403);
+            }
+            
+            $validated = $validator->validated();
+            
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'role' => $validated['role'] ?? 'tutor'
+            ]);
+    
+        
+            //cet event à utilser ex lors de la verification de l'email
+            event(new Registered($user));
+            
+            //creation d'un token propre à l'utilisateur 
+            $token = $user->createToken('token')->plainTextToken;
+            return response()->json([
+                "data" => [
+                    'token' => $token,
+                    'user' => $user
+                ]
+            ], 201);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->string('password')),
-        ]);
-
-        event(new Registered($user));
-
-        Auth::login($user);
-
-        return response()->noContent();
+        } catch (\Exception $e) {
+            return response()->json([
+                "error" => $e->getMessage() 
+            ], 500);
+        }
+        
     }
 }
