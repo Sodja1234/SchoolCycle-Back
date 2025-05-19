@@ -24,6 +24,10 @@ class User extends Authenticatable
     public function announcement(){
         return $this->hasMany(Announcement::class);
     }
+
+    public function favorites(){
+        return $this->hasMany(Favorite::class,'created_by');
+    }
     protected $fillable = [
         'name',
         'email',

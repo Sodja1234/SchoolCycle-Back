@@ -22,7 +22,7 @@ class Announcement extends Model
         'exchange_location_lng',
         'exchange_location_lat',
         'created_by',
-        
+
     ];
     public function user():BelongsTo{
         return $this->belongsTo(User::class);
@@ -30,6 +30,9 @@ class Announcement extends Model
     public function category():BelongsTo{
         return $this->belongsTo(Category::class);
     }
-    
+
+    public function favorites(){
+        return $this->hasMany(Favorite::class);
+    }
 
 }
