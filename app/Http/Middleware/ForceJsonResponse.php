@@ -9,16 +9,23 @@ use Symfony\Component\HttpFoundation\Response;
 class ForceJsonResponse
 {
     /**
-     * Handle an incoming request.
+     * Intercepte une requête entrante et la modifie pour s'assurer
+     * que la réponse soit au format JSON pour toutes les routes API.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param \Illuminate\Http\Request $request La requête HTTP reçue
+     * @param \Closure $next La fonction qui permet de passer au middleware ou contrôleur suivant
+     * @return \Symfony\Component\HttpFoundation\Response La réponse HTTP
      */
     public function handle(Request $request, Closure $next): Response
     {
-        //forcer tous les requêtes api/* à renvoyer en json
-        if($request->is('api/*')) {
+        // Si l'URL de la requête commence par "api/", cela signifie que c'est une route d'API
+        if ($request->is('api/*')) {
+            // On force le header "Accept" à "application/json"
+            // Cela garantit que les réponses seront formatées en JSON
             $request->headers->set('Accept', 'application/json');
         }
+
+        // On continue le traitement de la requête (middleware suivant ou contrôleur)
         return $next($request);
     }
 }
