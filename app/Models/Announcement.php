@@ -5,12 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\Category;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Announcement extends Model
 {
+    use HasFactory;
     protected $fillable =[
         'title',
         'description',
+        'category_id',
         'operation_type',
         'price',
         'is_completed',
@@ -18,11 +21,15 @@ class Announcement extends Model
         'exchange_location_address',
         'exchange_location_lng',
         'exchange_location_lat',
-        'create_by',
+        'created_by',
         
     ];
-    public function users():BelongsTo{
+    public function user():BelongsTo{
         return $this->belongsTo(User::class);
     }
+    public function category():BelongsTo{
+        return $this->belongsTo(Category::class);
+    }
+    
 
 }
