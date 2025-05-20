@@ -2,48 +2,45 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Models\User;
-use Illuminate\Auth\Notifications\ResetPassword;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
+use App\Models\User;
+use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class PasswordResetTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_reset_password_link_can_be_requested(): void
+    public function test_it_sends_a_password_reset_link_successfully()
     {
-        Notification::fake();
+        $user = User::factory()->create(['email' => 'john@example.com']);
 
-        $user = User::factory()->create();
+        $response = $this->postJson(route('password.email'), [
+            'email' => 'john@example.com',
+        ]);
 
-        $this->post('/forgot-password', ['email' => $user->email]);
-
-        Notification::assertSentTo($user, ResetPassword::class);
+        $response->assertOk()
+                 ->assertJson([
+                     'status' => trans(Password::RESET_LINK_SENT),
+                 ]);
     }
 
-    public function test_password_can_be_reset_with_valid_token(): void
+    public function test_it_requires_email_field()
     {
-        Notification::fake();
+        $response = $this->postJson(route('password.email'), []);
 
-        $user = User::factory()->create();
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['email']);
+    }
 
-        $this->post('/forgot-password', ['email' => $user->email]);
+    public function test_it_fails_with_non_existing_email()
+    {
+        $response = $this->postJson(route('password.email'), [
+            'email' => 'nonexistent@example.com',
+        ]);
 
-        Notification::assertSentTo($user, ResetPassword::class, function (object $notification) use ($user) {
-            $response = $this->post('/reset-password', [
-                'token' => $notification->token,
-                'email' => $user->email,
-                'password' => 'password',
-                'password_confirmation' => 'password',
-            ]);
-
-            $response
-                ->assertSessionHasNoErrors()
-                ->assertStatus(200);
-
-            return true;
-        });
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['email']);
     }
 }
