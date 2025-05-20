@@ -29,6 +29,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function favorites(){
         return $this->hasMany(Favorite::class,'created_by');
     }
+
+    public function preferences(){
+        return $this->belongsToMany(Category::class,'preferences','created_by','category_id');
+    }
+
     protected $fillable = [
         'name',
         'email',
