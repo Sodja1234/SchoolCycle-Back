@@ -11,8 +11,8 @@ class Chat extends Model
     use HasFactory;
 
     protected $fillable = [
-        'created_by',
-        'posted_by',
+        'created_by', 
+        'posted_by', //récupération de l'id de l'utilisateur qui a posté le message
         'is_closed',
         'closed_at',
         'close_to',
@@ -27,5 +27,10 @@ class Chat extends Model
     public function messages()
     {
         return $this -> hasMany(Message::class, 'conversation');
+    }
+
+    public function announcement()
+    {
+        return $this -> belongsTo(Announcement::class, 'posted_by');
     }
 }

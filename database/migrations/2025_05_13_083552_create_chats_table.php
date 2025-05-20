@@ -16,12 +16,9 @@ return new class extends Migration
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->boolean('is_closed')->default(false);
             $table->timestamp('closed_at')->nullable();
-            $table->unsignedBigInteger('posted_by');
+            $table->foreignId('posted_by')->constrained('announcements')->onDelete('cascade');
             $table->timestamp('close_to')->nullable();
             $table->timestamps();
-
-            //une clé unique pour éviter les doublons entre user et annonce
-            $table -> unique(['created_by', 'posted_by']); 
         });
     }
 
