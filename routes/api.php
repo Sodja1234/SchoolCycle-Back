@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\MessageController;
 use Illuminate\Http\Request;
@@ -25,3 +27,8 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::apiResource('/announcements', AnnouncementController::class);
+Route::apiResource('/category', CategoryController::class);
+
+require __DIR__.'/auth.php';
