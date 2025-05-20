@@ -4,15 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\AnnouncementResource;
 use App\Models\Announcement;
+use App\Models\User;
+use App\Notifications\NewAnnouncementNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 
 class AnnouncementController extends Controller
 {
     //function pour voir toutes les annonces
     public function index()
     {
-        return AnnouncementResource::collection(Announcement::class);
+        return AnnouncementResource::collection(Announcement::all());
     }
 
 
@@ -51,7 +54,19 @@ class AnnouncementController extends Controller
             ]);
 
             $announcement = Announcement::create($validated);
-         
+
+            // recherche des utilisateurs
+            $users = User::whereHas('preferences',function($query) use ($announcement){
+                $query->where('categories.id',$announcement->category_id);
+            })->get();
+
+
+            // verification si il n'a trouvé aucun utilisateur
+            if($users->count() !== 0){
+                //Envoi des mail aux utilisateurs
+                Notification::send($users,new NewAnnouncementNotification($announcement));
+            }
+
             return new AnnouncementResource($announcement);
         } catch (\Exception $exception) {
             return response()->json([
@@ -59,7 +74,7 @@ class AnnouncementController extends Controller
                 'Erreur' => $exception->getMessage()
             ]);
         }
-       
+
     }
 
     //function pour mettre à une annonce
