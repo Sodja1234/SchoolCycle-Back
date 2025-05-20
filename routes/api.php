@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ToggleFavoriteController;
@@ -25,6 +27,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Ajouter ou retirer une annonce aux favoris
     Route::post('/favorites/{announcement}',ToggleFavoriteController::class);
 });
+
+Route::apiResource('/announcements', AnnouncementController::class);
+Route::apiResource('/category', CategoryController::class);
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();

@@ -25,7 +25,7 @@ class AnnouncementFactory extends Factory
             'title'=>$this->faker->word(),
             'description'=>$this->faker->paragraph(),
             'category_id'=> Category::inRandomOrder()->first()->id ?? Category::factory(),
-            'operation_type'=>$this->faker->numberBetween(1,3),
+            'operation_type'=>$this->faker->randomElement(['don', 'sale', 'exchange']),
             'price'=>$this->faker->numberBetween(100, 10000),
             'is_completed'=>false,
             'is_cancelled'=>false,

@@ -12,10 +12,10 @@ use Illuminate\Support\Facades\Notification;
 
 class AnnouncementController extends Controller
 {
-    //function pour voir toutes les annonces
+    //function pour voir toutes les annonces disponible
     public function index()
     {
-        return AnnouncementResource::collection(Announcement::all());
+        return AnnouncementResource::collection(Announcement::where('is_completed', false)->where('is_cancelled', false)->orderBy('created_at', 'desc')->get() );
     }
 
 
@@ -37,7 +37,7 @@ class AnnouncementController extends Controller
     public function store(Request $request)
     {
         //on recupere le user connecter
-        //$user=Auth::user();
+        $user=Auth::user();
         try {
             $validated = $request->validate([
                 'title' => 'required|string|min:5|max:500',
@@ -115,9 +115,8 @@ class AnnouncementController extends Controller
     }
 
     //funnction pour supprimer une annonce
-    public function destroy($id)
+    public function destroy(Announcement $announcement)
     {
-        $announcement = Announcement::findOrFail($id);
         $user = Auth::user();
 
         try {
