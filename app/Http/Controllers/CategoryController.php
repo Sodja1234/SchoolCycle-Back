@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\CategoryResource;
 use App\Models\Category;
 use Illuminate\Http\Request;
 
@@ -12,7 +13,7 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        return Category::all();
+        return CategoryResource::collection(Category::all());
     }
 
 
@@ -30,10 +31,7 @@ class CategoryController extends Controller
             'description'=>$request['description']
         ]);
         
-        return response()->json([
-            'Message'=>"Category creer avec success",
-            'data'=>$category
-        ],201);
+        return new CategoryResource($category);
     }
 
     /**
@@ -42,9 +40,7 @@ class CategoryController extends Controller
     public function show($id)
     {
         $category= Category:: findOrFail($id);
-        return response()->json([
-            'data' => $category
-        ]);
+        return new CategoryResource($category);
 
     }
 
@@ -63,17 +59,15 @@ class CategoryController extends Controller
             'name'=>$request['name'],
             'description'=>$request['description']
         ]);
-        return response()->json([
-            'Message'=>'Category mise à Jour'
-        ], 200);
+        return new CategoryResource($category);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy( Category $category)
     {
-        $category = Category::findOrFail($id);
+        
         $category->delete();
         return response()->json([
 
