@@ -25,6 +25,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function announcements(){
         return $this->hasMany(Announcement::class);
     }
+
+    public function favorites(){
+        return $this->hasMany(Favorite::class,'created_by');
+    }
     protected $fillable = [
         'name',
         'email',
