@@ -18,4 +18,8 @@ class Category extends Model
     public function announcements(){
         return $this->hasMany(Announcement::class);
     }
+
+    public function preferences(){
+        return $this->belongsToMany(User::class,'preferences','category_id','created_by');
+    }
 }
