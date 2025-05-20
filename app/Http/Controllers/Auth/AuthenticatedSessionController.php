@@ -4,35 +4,60 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
+use Hash;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\Auth\AuthLoginResource;
 
 class AuthenticatedSessionController extends Controller
 {
     /**
-     * Handle an incoming authentication request.
+     * Gère une requête de connexion (authentification).
+     *
+     * @param LoginRequest $request Requête contenant les données de connexion (email + mot de passe validés)
+     * @return AuthLoginResource|JsonResponse Retourne soit un objet ressource avec token, soit une réponse d'erreur
      */
-    public function store(LoginRequest $request): Response
+    public function store(LoginRequest $request): AuthLoginResource | JsonResponse
     {
-        $request->authenticate();
+        // Recherche de l'utilisateur par son adresse email
+        $user = User::where('email', '=', $request->validated('email'))->first();
 
-        $request->session()->regenerate();
+        // Vérifie si l'utilisateur existe et si le mot de passe est correct
+        if (!($user instanceof User) || !Hash::check($request->validated('password'), $user->password)) {
+            // Si l'utilisateur n'existe pas ou le mot de passe est incorrect, on retourne une erreur 401
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
 
-        return response()->noContent();
+        // Génération d’un token d’authentification via Laravel Sanctum
+        $token = $user->createToken($user->email)->plainTextToken;
+
+        // Ajoute manuellement le token dans l’objet utilisateur (pour pouvoir l'envoyer dans la ressource)
+        $user->token = $token;
+
+        // Retourne la ressource contenant les infos utilisateur + token
+        return new AuthLoginResource($user);
     }
 
     /**
-     * Destroy an authenticated session.
+     * Déconnecte l'utilisateur (suppression du token d'accès actuel).
+     *
+     * @param Request $request La requête contenant l'utilisateur authentifié
+     * @return JsonResponse Réponse confirmant la déconnexion
      */
-    public function destroy(Request $request): Response
+    public function destroy(Request $request): JsonResponse
     {
-        Auth::guard('web')->logout();
+        $user  = $request->user(); // Récupère l'utilisateur actuellement connecté via le token
 
-        $request->session()->invalidate();
+        // Vérifie si l'utilisateur est bien authentifié
+        if (!($user instanceof User)) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
 
-        $request->session()->regenerateToken();
+        // Supprime le token actuel (le déconnecte)
+        $request->user()->currentAccessToken()->delete();
 
-        return response()->noContent();
+        // Réponse de confirmation
+        return response()->json(['logout' => true]);
     }
 }

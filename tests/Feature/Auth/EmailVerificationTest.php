@@ -2,48 +2,51 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Models\User;
-use Illuminate\Auth\Events\Verified;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
+use App\Models\User;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class EmailVerificationTest extends TestCase
 {
     use RefreshDatabase;
+    
 
-    public function test_email_can_be_verified(): void
+    
+    public function test_unverified_user_receives_verification_email()
     {
+        Notification::fake();
+
         $user = User::factory()->unverified()->create();
 
-        Event::fake();
+        $this->actingAs($user)
+            ->postJson(route('verification.send'))
+            ->assertOk()
+            ->assertJson(['status' => 'verification-link-sent']);
 
-        $verificationUrl = URL::temporarySignedRoute(
-            'verification.verify',
-            now()->addMinutes(60),
-            ['id' => $user->id, 'hash' => sha1($user->email)]
-        );
-
-        $response = $this->actingAs($user)->get($verificationUrl);
-
-        Event::assertDispatched(Verified::class);
-        $this->assertTrue($user->fresh()->hasVerifiedEmail());
-        $response->assertRedirect(config('app.frontend_url').'/dashboard?verified=1');
+        Notification::assertSentTo($user, VerifyEmail::class);
     }
 
-    public function test_email_is_not_verified_with_invalid_hash(): void
+    
+    public function test_verified_user_does_not_receive_verification_email()
     {
-        $user = User::factory()->unverified()->create();
+        Notification::fake();
 
-        $verificationUrl = URL::temporarySignedRoute(
-            'verification.verify',
-            now()->addMinutes(60),
-            ['id' => $user->id, 'hash' => sha1('wrong-email')]
-        );
+        $user = User::factory()->create(['email_verified_at' => now()]);
 
-        $this->actingAs($user)->get($verificationUrl);
+        $this->actingAs($user)
+            ->postJson(route('verification.send'))
+            ->assertOk()
+            ->assertJson(['status' => 'verification-link-already']);
 
-        $this->assertFalse($user->fresh()->hasVerifiedEmail());
+        Notification::assertNothingSent();
+    }
+
+    
+    public function test_guest_user_cannot_request_verification_email()
+    {
+        $this->postJson(route('verification.send'))
+            ->assertUnauthorized();
     }
 }
