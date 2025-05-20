@@ -12,7 +12,7 @@ class Message extends Model
 
     protected $fillable = [
         'id',
-        'conversation',
+        'conversation', // fait référence à la table chat
         'sender',
         'receiver',
         'content',

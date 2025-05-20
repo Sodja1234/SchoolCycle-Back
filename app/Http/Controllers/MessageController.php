@@ -20,14 +20,15 @@ class MessageController extends Controller
             return response() -> json(['error' => 'Cette conversation est fermée'], 403);
         }
 
-        //Comme on peut pas vérifier l'auteur de l'annonce 
-        //On va supposer que l'utilisateur courant s'il est créateur de chat
-        if (Auth::id() !== $chat->created_by){
-            abort(403, 'vous n\'avez pas accès à cette conversation');
-        }
-
-        $receiver = $chat->created_by; 
-        $message = Message::create([
+       //On vérifie si l'utilisateur a bien le droit d'envoyer un message
+       if (Auth::id() !== $chat -> created_by && Auth::id() !== $chat -> announcement->created_by){
+            return response()-> json(['error' => "vous n'avez pas accès à cette conversation"], 403);
+       }
+        //On vérifie si l'utilisateur a bien le droit d'envoyer un message
+        $receiver = (Auth::id() === $chat -> created_by && $chat->announcement)
+            ? $chat -> announcement->created_by: $chat->created_by;
+       
+        $message = $chat->messages()->create([
             'conversation' => $chat ->id,
             'sender' => Auth::id(),
             'receiver' => $receiver,
@@ -40,74 +41,19 @@ class MessageController extends Controller
 
     public function getMessages(Chat $chat)
     {
-        if (Auth::id() !== $chat -> created_by){
-            abort(403, 'vous n\'avez pas accès à cette conversation');
+
+        if (Auth::id() !== $chat -> created_by && Auth::id() !== $chat -> announcement->created_by){
+            return response()-> json(['error' => "Vous n'avez pas accès à cette conversation"], 403);
         }
 
-        $message = $chat -> messages()->latest()->get();
+        $messages = $chat -> messages()->with(['sender', 'receiver'])->latest()->get();
 
-        return response() -> json($chat -> messages);
+        return response() -> json($messages);
     }
     
     
-    
-    
-    
-    
-    
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Message $message)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Message $message)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Message $message)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Message $message)
-    {
-        //
-    }
 }
+    
+    
+    
+
