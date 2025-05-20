@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -23,7 +22,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var list<string>
      */
 
-    public function announcement(){
+    public function announcements(){
         return $this->hasMany(Announcement::class);
     }
     protected $fillable = [
