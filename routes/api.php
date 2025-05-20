@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ToggleFavoriteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,6 +21,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Lister tous les chats d'un utilisateur connecté
     Route::get('/my-chats', [ChatController::class, 'myChats']);
+
+    // Ajouter ou retirer une annonce aux favoris
+    Route::post('/favorites/{announcement}',ToggleFavoriteController::class);
 });
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {

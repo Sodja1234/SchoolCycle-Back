@@ -10,11 +10,11 @@ class ToggleFavoriteController extends Controller
     {
         try {
             // Récupération de l'utilisateur connecté
-            $user = auth()->user() ?? \App\Models\User::first();
+            $user = auth()->user();
             if (!$user) {
                 return response()->json([
                     'erreur' => 'Utilisateur non connecté'
-                ], 401);
+                ],);
             }
 
             // Vérifie si l'annonce existe
@@ -22,7 +22,7 @@ class ToggleFavoriteController extends Controller
             if (!$announcement) {
                 return response()->json([
                     'erreur' => 'Annonce inexistante'
-                ], 404);
+                ]);
             }
 
             // Vérifie si déjà en favoris
@@ -48,7 +48,7 @@ class ToggleFavoriteController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 "message" => $e->getMessage()
-            ], 500);
+            ]);
         }
     }
 }
