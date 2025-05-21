@@ -12,7 +12,11 @@ class AnnouncementController extends Controller
     //function pour voir toutes les annonces disponible
     public function index()
     {
-        return AnnouncementResource::collection(Announcement::where('is_completed', false)->where('is_cancelled', false)->orderBy('created_at', 'desc')->get());
+        return AnnouncementResource::collection(Announcement::where('is_completed', false)
+        ->where('is_cancelled', false)
+        ->orderBy('created_at', 'desc')
+        ->paginate(10)
+    );
     }
 
 
