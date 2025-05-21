@@ -50,8 +50,13 @@ class AnnouncementController extends Controller
                 
             ]);
 
+            if($user->role==='admin'){
+                return response()->json([
+                    "Message"=>"Vous n'avez pas le droit de creer une annonce car vous etes admin",
+                ],403);
+            }else{
             $announcement = Announcement::create(array_merge($validatetd, ['created_by'=> $user->id]));
-
+            }
             return new AnnouncementResource($announcement);
         } catch (\Exception $exception) {
             return response()->json([
