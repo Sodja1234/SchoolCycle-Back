@@ -47,7 +47,7 @@ class AnnouncementController extends Controller
                 ],403);
         //on recupere le user connecter
         try {
-            $validatetd =$request->validate([
+            $validated =$request->validate([
                 'title' => 'required|string|min:5|max:500',
                 'description' => 'required|string|max:1000',
                 'category_id' => 'required|exists:categories,id',
@@ -61,7 +61,7 @@ class AnnouncementController extends Controller
                 'created_by' => 'required|exists:users,id'
             ]);
 
-            $announcement = Announcement::create($validated);
+            $announcement = Announcement::create(array_merge($validated, ['created_by'=>$user->id]));
              $users = User::whereHas('preferences',function($query) use ($announcement){
                 $query->where('categories.id',$announcement->category_id);
             })->get();
