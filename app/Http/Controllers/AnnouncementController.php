@@ -15,7 +15,11 @@ class AnnouncementController extends Controller
     //function pour voir toutes les annonces disponible
     public function index()
     {
-        return AnnouncementResource::collection(Announcement::where('is_completed', false)->where('is_cancelled', false)->orderBy('created_at', 'desc')->get() );
+        return AnnouncementResource::collection(Announcement::where('is_completed', false)
+        ->where('is_cancelled', false)
+        ->orderBy('created_at', 'desc')
+        ->paginate(10)
+    );
     }
 
 
@@ -36,13 +40,17 @@ class AnnouncementController extends Controller
     //function pour la creation d'une annonce
     public function store(Request $request)
     {
+        if($user->role !== 'tutor'){
+                return response()->json([
+                    "Message"=>"Vous n'avez pas le droit de creer une annonce car vous etes admin",
+                ],403);
         //on recupere le user connecter
-        $user=Auth::user();
+        $user = Auth::user();
         try {
-            $validated = $request->validate([
+            $validatetd =$request->validate([
                 'title' => 'required|string|min:5|max:500',
                 'description' => 'required|string|max:1000',
-                'category_id'=>'required|exists:categories,id',
+                'category_id' => 'required|exists:categories,id',
                 'operation_type' => 'required|string|in:don,sale,exchange',
                 'price' => 'nullable|numeric',
                 'is_completed' => 'nullable|boolean',
@@ -54,9 +62,7 @@ class AnnouncementController extends Controller
             ]);
 
             $announcement = Announcement::create($validated);
-
-            // recherche des utilisateurs
-            $users = User::whereHas('preferences',function($query) use ($announcement){
+             $users = User::whereHas('preferences',function($query) use ($announcement){
                 $query->where('categories.id',$announcement->category_id);
             })->get();
 
@@ -66,7 +72,7 @@ class AnnouncementController extends Controller
                 //Envoi des mail aux utilisateurs
                 Notification::send($users,new NewAnnouncementNotification($announcement));
             }
-
+         
             return new AnnouncementResource($announcement);
         } catch (\Exception $exception) {
             return response()->json([
@@ -74,7 +80,7 @@ class AnnouncementController extends Controller
                 'Erreur' => $exception->getMessage()
             ]);
         }
-
+       
     }
 
     //function pour mettre à une annonce
@@ -89,7 +95,7 @@ class AnnouncementController extends Controller
                     'Message' => "Vous n'avez pas le droit de modifier cette annonce"
                 ], 403);
             } else {
-                $validated =$request->validate([
+                $validated = $request->validate([
                     'title' => 'required|string|min:5|max:500',
                     'descirption' => 'required|string|max:1000',
                     'operation_type' => 'required|string|in:don,sale,exchange',
