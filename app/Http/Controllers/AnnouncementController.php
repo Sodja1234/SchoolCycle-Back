@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\AnnouncementResource;
 use App\Models\Announcement;
+use App\Models\User;
+use App\Notifications\NewAnnouncementNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 
 class AnnouncementController extends Controller
 {
@@ -37,6 +40,10 @@ class AnnouncementController extends Controller
     //function pour la creation d'une annonce
     public function store(Request $request)
     {
+        if($user->role !== 'tutor'){
+                return response()->json([
+                    "Message"=>"Vous n'avez pas le droit de creer une annonce car vous etes admin",
+                ],403);
         //on recupere le user connecter
         $user = Auth::user();
         try {
@@ -51,16 +58,21 @@ class AnnouncementController extends Controller
                 'exchange_location_address' => 'string|max:255',
                 'exchange_location_lng' => 'numeric',
                 'exchange_location_lat' => 'numeric',
-                
+                'created_by' => 'required|exists:users,id'
             ]);
 
-            if($user->role==='admin'){
-                return response()->json([
-                    "Message"=>"Vous n'avez pas le droit de creer une annonce car vous etes admin",
-                ],403);
-            }else{
-            $announcement = Announcement::create(array_merge($validatetd, ['created_by'=> $user->id]));
+            $announcement = Announcement::create($validated);
+             $users = User::whereHas('preferences',function($query) use ($announcement){
+                $query->where('categories.id',$announcement->category_id);
+            })->get();
+
+
+            // verification si il n'a trouvé aucun utilisateur
+            if($users->count() !== 0){
+                //Envoi des mail aux utilisateurs
+                Notification::send($users,new NewAnnouncementNotification($announcement));
             }
+         
             return new AnnouncementResource($announcement);
         } catch (\Exception $exception) {
             return response()->json([
@@ -68,6 +80,7 @@ class AnnouncementController extends Controller
                 'Erreur' => $exception->getMessage()
             ]);
         }
+       
     }
 
     //function pour mettre à une annonce
