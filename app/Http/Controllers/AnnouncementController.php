@@ -40,12 +40,12 @@ class AnnouncementController extends Controller
     //function pour la creation d'une annonce
     public function store(Request $request)
     {
+        $user = Auth::user();
         if($user->role !== 'tutor'){
                 return response()->json([
                     "Message"=>"Vous n'avez pas le droit de creer une annonce car vous etes admin",
                 ],403);
         //on recupere le user connecter
-        $user = Auth::user();
         try {
             $validatetd =$request->validate([
                 'title' => 'required|string|min:5|max:500',
@@ -81,8 +81,9 @@ class AnnouncementController extends Controller
             ]);
         }
        
-    }
+    }}
 
+    
     //function pour mettre à une annonce
     public function update(Request $request, Announcement $announcement)
     {
