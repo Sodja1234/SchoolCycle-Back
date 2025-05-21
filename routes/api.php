@@ -28,7 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/favorites/{announcement}',ToggleFavoriteController::class);
 });
 
-Route::apiResource('/announcements', AnnouncementController::class);
+Route::apiResource('/announcements', AnnouncementController::class)->middleware('auth:sanctum');
 Route::apiResource('/category', CategoryController::class);
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
