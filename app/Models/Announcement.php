@@ -35,4 +35,8 @@ class Announcement extends Model
         return $this->hasMany(Favorite::class);
     }
 
+    public function photos(){
+        return $this->hasMany(Photo::class);
+    }
+
 }

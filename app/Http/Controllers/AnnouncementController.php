@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\AnnouncementResource;
 use App\Models\Announcement;
+use App\Models\Photo;
 use App\Models\User;
 use App\Notifications\NewAnnouncementNotification;
 use Illuminate\Http\Request;
@@ -15,11 +16,12 @@ class AnnouncementController extends Controller
     //function pour voir toutes les annonces disponible
     public function index()
     {
-        return AnnouncementResource::collection(Announcement::where('is_completed', false)
-        ->where('is_cancelled', false)
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-    );
+        return AnnouncementResource::collection(
+            Announcement::where('is_completed', false)
+                ->where('is_cancelled', false)
+                ->orderBy('created_at', 'desc')
+                ->paginate(10)
+        );
     }
 
 
@@ -40,14 +42,16 @@ class AnnouncementController extends Controller
     //function pour la creation d'une annonce
     public function store(Request $request)
     {
-        $user = Auth::user();
-        if($user->role !== 'tutor'){
-                return response()->json([
-                    "Message"=>"Vous n'avez pas le droit de creer une annonce car vous etes admin",
-                ],403);
         //on recupere le user connecter
+        $user = Auth::user();
+
         try {
-            $validatetd =$request->validate([
+            if ($user->role !== 'tutor') {
+                return response()->json([
+                    "Message" => "Vous n'avez pas le droit de creer une annonce"
+                ]);
+            }
+            $request->validate([
                 'title' => 'required|string|min:5|max:500',
                 'description' => 'required|string|max:1000',
                 'category_id' => 'required|exists:categories,id',
@@ -58,21 +62,48 @@ class AnnouncementController extends Controller
                 'exchange_location_address' => 'string|max:255',
                 'exchange_location_lng' => 'numeric',
                 'exchange_location_lat' => 'numeric',
-                'created_by' => 'required|exists:users,id'
+                'photos.*'=>'required|image|mimes:jpg,png,gif|max:2040'
             ]);
 
-            $announcement = Announcement::create($validated);
-             $users = User::whereHas('preferences',function($query) use ($announcement){
-                $query->where('categories.id',$announcement->category_id);
+            $announcement = Announcement::create([
+                'title' => $request['title'],
+                'description' => $request['description'],
+                'category_id' => $request['category_id'],
+                'operation_type' => $request['operation_type'],
+                'price' => $request['price'],
+                'is_completed' => $request['is_completed'] ?? false,
+                'is_cancelled' => $request['is_cancelled'] ?? false,
+                'exchange_location_address' => $request['exchange_location_address'],
+                'exchange_location_lng' => $request['exchange_location_lng'],
+                'exchange_location_lat' => $request['exchange_location_lat'],
+                'created_by' => $user->id
+
+            ]);
+
+            if ($request->hasFile('photos')) {
+                foreach ($request->file('photos') as $image) {
+                    $path = $image->store('announcements', 'public');
+
+                    Photo::create([
+                        'announcement_id' => $announcement->id,
+                        'url' => $path,
+                    ]);
+                }
+            }
+
+            $announcement->load(['category', 'user','favorites','photos']);
+
+            $users = User::whereHas('preferences', function ($query) use ($announcement) {
+                $query->where('categories.id', $announcement->category_id);
             })->get();
 
 
             // verification si il n'a trouvé aucun utilisateur
-            if($users->count() !== 0){
+            if ($users->count() !== 0) {
                 //Envoi des mail aux utilisateurs
-                Notification::send($users,new NewAnnouncementNotification($announcement));
+                Notification::send($users, new NewAnnouncementNotification($announcement));
             }
-         
+
             return new AnnouncementResource($announcement);
         } catch (\Exception $exception) {
             return response()->json([
@@ -80,10 +111,9 @@ class AnnouncementController extends Controller
                 'Erreur' => $exception->getMessage()
             ]);
         }
-       
-    }}
+    }
 
-    
+
     //function pour mettre à une annonce
     public function update(Request $request, Announcement $announcement)
     {
@@ -91,14 +121,14 @@ class AnnouncementController extends Controller
         try {
 
             //on verifie si l'utilisateur connecter est l'auteur de l'article
-            if ($user->id !== $announcement->user_id) {
+            if ($user->id !== $announcement->created_by) {
                 return response()->json([
                     'Message' => "Vous n'avez pas le droit de modifier cette annonce"
                 ], 403);
             } else {
                 $validated = $request->validate([
                     'title' => 'required|string|min:5|max:500',
-                    'descirption' => 'required|string|max:1000',
+                    'description' => 'required|string|max:1000',
                     'operation_type' => 'required|string|in:don,sale,exchange',
                     'price' => 'nullable|numeric',
                     'is_completed' => 'nullable|boolean',
@@ -106,7 +136,7 @@ class AnnouncementController extends Controller
                     'exchange_location_address' => 'string|max:255',
                     'exchange_location_lng' => 'numeric',
                     'exchange_location_lat' => 'numeric',
-                    'category_id' => 'required|exists:category,id'
+                    'category_id' => 'required|exists:categories,id'
                 ]);
 
                 $announcement->update($validated);
@@ -128,7 +158,7 @@ class AnnouncementController extends Controller
 
         try {
 
-            if ($user->id !== $announcement->user_id) {
+            if ($user->id !== $announcement->created_by) {
                 return response()->json([
                     'Message' => "Vous n'avez pas le droit de supprimer cette annonce",
                 ], 403);
