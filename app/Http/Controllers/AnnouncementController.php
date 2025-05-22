@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\AnnouncementResource;
 use App\Models\Announcement;
+use App\Models\Photo;
 use App\Models\User;
 use App\Notifications\NewAnnouncementNotification;
 use Illuminate\Http\Request;
@@ -61,6 +62,7 @@ class AnnouncementController extends Controller
                 'exchange_location_address' => 'string|max:255',
                 'exchange_location_lng' => 'numeric',
                 'exchange_location_lat' => 'numeric',
+                'photos.*'=>'required|image|mimes:jpg,png,gif|max:2040'
             ]);
 
             $announcement = Announcement::create([
@@ -77,6 +79,19 @@ class AnnouncementController extends Controller
                 'created_by' => $user->id
 
             ]);
+
+            if ($request->hasFile('photos')) {
+                foreach ($request->file('photos') as $image) {
+                    $path = $image->store('announcements', 'public');
+
+                    Photo::create([
+                        'announcement_id' => $announcement->id,
+                        'url' => $path,
+                    ]);
+                }
+            }
+
+            $announcement->load(['category', 'user','favorites','photos']);
 
             $users = User::whereHas('preferences', function ($query) use ($announcement) {
                 $query->where('categories.id', $announcement->category_id);
