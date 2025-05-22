@@ -25,7 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/my-chats', [ChatController::class, 'myChats']);
 
     // Ajouter ou retirer une annonce aux favoris
-    Route::post('/favorites/{announcement}',ToggleFavoriteController::class);
+    Route::post('/favorites/{announcement}', ToggleFavoriteController::class);
 });
 
 
@@ -35,12 +35,12 @@ Route::apiResource('/announcements', AnnouncementController::class)->only(['inde
 // Routes protégées
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('/announcements', AnnouncementController::class)->except(['index', 'show']);
+    Route::apiResource('/categories', CategoryController::class);
 });
 
-Route::apiResource('/categories', CategoryController::class);
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
