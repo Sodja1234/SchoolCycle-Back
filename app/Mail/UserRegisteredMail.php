@@ -98,9 +98,7 @@ class UserRegisteredMail extends Mailable
 
         // Construit une URL vers le frontend (ex: SPA) en passant les paramètres signés
         // config('app.frontend_url') correspond à l'URL du frontend (ex: http://localhost:4200)
-        return config('app.frontend_url') . '/verify-email?' . http_build_query(array_merge($queryParams, [
-            'id' => $this->user->id,
-            'hash' => sha1($this->user->email),
-        ]));
+        return config('app.frontend_url') . '/verify-email/' . $this->user->id . '/' . sha1($this->user->email) . '?' . http_build_query($queryParams);
+
     }
 }
