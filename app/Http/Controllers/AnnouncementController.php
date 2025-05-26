@@ -56,13 +56,14 @@ class AnnouncementController extends Controller
                 'description' => 'required|string|max:1000',
                 'category_id' => 'required|exists:categories,id',
                 'operation_type' => 'required|string|in:don,sale,exchange',
+                'state' => 'required|string|in:new,good,damaged,like new',
                 'price' => 'nullable|numeric',
                 'is_completed' => 'nullable|boolean',
                 'is_cancelled' => 'nullable|boolean',
                 'exchange_location_address' => 'string|max:255',
                 'exchange_location_lng' => 'numeric',
                 'exchange_location_lat' => 'numeric',
-                'photos.*'=>'required|image|mimes:jpg,png,gif|max:2040'
+                'photos.*' => 'required|image|mimes:jpg,png,gif|max:2040'
             ]);
 
             $announcement = Announcement::create([
@@ -70,6 +71,7 @@ class AnnouncementController extends Controller
                 'description' => $request['description'],
                 'category_id' => $request['category_id'],
                 'operation_type' => $request['operation_type'],
+                'state'=>$request['state'],
                 'price' => $request['price'],
                 'is_completed' => $request['is_completed'] ?? false,
                 'is_cancelled' => $request['is_cancelled'] ?? false,
@@ -91,7 +93,7 @@ class AnnouncementController extends Controller
                 }
             }
 
-            $announcement->load(['category', 'user','favorites','photos']);
+            $announcement->load(['category', 'user', 'favorites', 'photos']);
 
             $users = User::whereHas('preferences', function ($query) use ($announcement) {
                 $query->where('categories.id', $announcement->category_id);
@@ -130,6 +132,7 @@ class AnnouncementController extends Controller
                     'title' => 'required|string|min:5|max:500',
                     'description' => 'required|string|max:1000',
                     'operation_type' => 'required|string|in:don,sale,exchange',
+                    'state' => 'required|string|in:new,good,damaged,like new',
                     'price' => 'nullable|numeric',
                     'is_completed' => 'nullable|boolean',
                     'is_cancelled' => 'nullable|boolean',

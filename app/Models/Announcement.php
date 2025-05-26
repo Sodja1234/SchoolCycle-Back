@@ -15,6 +15,7 @@ class Announcement extends Model
         'description',
         'category_id',
         'operation_type',
+        'state',
         'price',
         'is_completed',
         'is_cancelled',
