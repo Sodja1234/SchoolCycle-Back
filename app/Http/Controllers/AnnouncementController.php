@@ -14,14 +14,37 @@ use Illuminate\Support\Facades\Notification;
 class AnnouncementController extends Controller
 {
     //function pour voir toutes les annonces disponible
-    public function index()
+    public function index(Request $request)
     {
+         //si la valeur est null, la methode retourne toutes les annonces
+        //si c'est une chaine de caractere separé par  des virgules,on convertit en tableau
+        $toArray = function ($value) {
+            if (is_null($value)) return null;
+            return is_array($value) ? $value : explode(',', $value);
+        };
+
+        //on charge les relations et on recurepere seulement les annonces disponibles
+        $query = Announcement::with(['photos', 'favorites', 'user', 'category'])
+            ->where('is_completed', false)
+            ->where('is_cancelled', false);
+
+        // Filtres dynamiques
+
+        //pour operation_type
+        if ($request->has('operation_type')) {
+            $query->whereIn('operation_type', $toArray($request->query('operation_type')));
+        }
+
+
+        //pour price
+        if ($request->has('price')) {
+            $query->whereIn('price', $toArray($request->query('price')));
+        }
+
         return AnnouncementResource::collection(
-            Announcement::where('is_completed', false)
-                ->where('is_cancelled', false)
-                ->orderBy('created_at', 'desc')
-                ->paginate(10)
+            $query->orderBy('created_at','desc')->paginate(10)
         );
+
     }
 
 
