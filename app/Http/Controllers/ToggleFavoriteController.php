@@ -38,7 +38,8 @@ class ToggleFavoriteController extends Controller
 
             // Ajoute en favoris
             $user->favorites()->create([
-                'announcement_id' => $announcement_id
+                'announcement_id' => $announcement_id,
+                'created_by' => $user->id
             ]);
 
             return response()->json([
