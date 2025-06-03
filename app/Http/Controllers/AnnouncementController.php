@@ -16,10 +16,11 @@ class AnnouncementController extends Controller
     //function pour voir toutes les annonces disponible
     public function index(Request $request)
     {
-         //si la valeur est null, la methode retourne toutes les annonces
+        //si la valeur est null, la methode retourne toutes les annonces
         //si c'est une chaine de caractere separé par  des virgules,on convertit en tableau
         $toArray = function ($value) {
-            if (is_null($value)) return null;
+            if (is_null($value))
+                return null;
             return is_array($value) ? $value : explode(',', $value);
         };
 
@@ -42,7 +43,7 @@ class AnnouncementController extends Controller
         }
 
         return AnnouncementResource::collection(
-            $query->orderBy('created_at','desc')->paginate(10)
+            $query->orderBy('created_at', 'desc')->paginate(10)
         );
 
     }
@@ -51,8 +52,12 @@ class AnnouncementController extends Controller
     public function show($id)
     {
         try {
-            $announcement = Announcement::findOrFail($id);
-            return new AnnouncementResource($announcement);
+            $announcementSingle = Announcement::findOrFail($id);
+            $announcement = new AnnouncementResource($announcementSingle);
+
+            return response()->json([
+                'data' => $announcement
+            ]);
         } catch (\Exception $exception) {
             return response()->json([
                 'Message' => 'Une erreur est survenue',
@@ -94,7 +99,7 @@ class AnnouncementController extends Controller
                 'description' => $request['description'],
                 'category_id' => $request['category_id'],
                 'operation_type' => $request['operation_type'],
-                'state'=>$request['state'],
+                'state' => $request['state'],
                 'price' => $request['price'],
                 'is_completed' => $request['is_completed'] ?? false,
                 'is_cancelled' => $request['is_cancelled'] ?? false,
@@ -201,4 +206,19 @@ class AnnouncementController extends Controller
             ], 500);
         }
     }
+
+    //function pour recuperer les announces similaires
+    public function getSimilarAnnoucement(Request $request, Announcement $announcement)
+    {
+        $similar = Announcement::where('category_id', $announcement->category_id)
+            ->where('id', '!=', $announcement->id)
+            ->latest()
+            ->take(5)
+            ->get();
+            
+        return response()->json([
+            'data' => $similar->load('photos')
+        ]);
+    }
+
 }
