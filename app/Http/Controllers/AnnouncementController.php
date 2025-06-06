@@ -43,7 +43,7 @@ class AnnouncementController extends Controller
         }
 
         return AnnouncementResource::collection(
-            $query->orderBy('created_at', 'desc')->paginate(10)
+            $query->orderBy('created_at', 'desc')->paginate(12)
         );
 
     }
@@ -215,10 +215,13 @@ class AnnouncementController extends Controller
             ->latest()
             ->take(5)
             ->get();
-            
+
+        $similar = AnnouncementResource::collection($similar);
+
         return response()->json([
-            'data' => $similar->load('photos')
+            'data' => $similar
         ]);
     }
+
 
 }
