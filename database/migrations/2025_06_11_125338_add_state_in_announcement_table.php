@@ -6,13 +6,10 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+       public function up(): void
     {
         Schema::table('announcements', function (Blueprint $table) {
-            $table->enum('state',['new','good','gamaged','like new']);
+            $table->enum('state',['new','good','damaged','like new']);
         });
     }
 
