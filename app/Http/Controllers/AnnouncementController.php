@@ -16,6 +16,7 @@ class AnnouncementController extends Controller
     //function pour voir toutes les annonces disponible
     public function index(Request $request)
     {
+
          //si la valeur est null, la methode retourne toutes les annonces
         //si c'est une chaine de caractere separé par  des virgules,on convertit en tableau
         $toArray = function ($value) {
@@ -30,6 +31,19 @@ class AnnouncementController extends Controller
 
         // Filtres dynamiques
 
+        //recherche globale sur titre et description
+        if($request -> has('search')){
+
+            //on converti en minuscule le contenu de la recherche pour eviter la casse 
+            $search = strtolower($request->query('search'));
+            
+            //on ecrit une requete sql  brute pour rechercher sur le tittre et la description
+            $query->where(function($q) use ($search){
+                $q->whereRaw('LOWER(title) LIKE ?',['%' .$search. '%'])
+                ->orwhereRaw('LOWER(description) LIKE ?',['%' .$search. '%']);
+            });
+        }
+ 
         //pour operation_type
         if ($request->has('operation_type')) {
             $query->whereIn('operation_type', $toArray($request->query('operation_type')));
@@ -42,7 +56,7 @@ class AnnouncementController extends Controller
         }
 
         return AnnouncementResource::collection(
-            $query->orderBy('created_at','desc')->paginate(10)
+            $query->orderBy('created_at','desc')->paginate(12)
         );
 
     }
