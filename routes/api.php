@@ -31,11 +31,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Routes publiques
 Route::apiResource('/announcements', AnnouncementController::class)->only(['index', 'show']);
+Route::apiResource('/categories', CategoryController::class)->only(['index', 'show']);
+
 
 // Routes protégées
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('/announcements', AnnouncementController::class)->except(['index', 'show']);
-    Route::apiResource('/categories', CategoryController::class);
+    Route::apiResource('/categories', CategoryController::class)->except(['index', 'show']);
 });
 
 
