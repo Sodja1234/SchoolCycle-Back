@@ -23,6 +23,7 @@ class AuthLoginResource extends JsonResource
             'email' => $this->email,                // L'adresse e-mail de l'utilisateur
             'email_verified_at' => $this->email_verified_at, // Date et heure de vérification de l'e-mail (null si non vérifié)
             'token' => $this->token,                // Le token d'authentification généré (ex: JWT ou token API)
+            'role' => $this->role
         ];
     }
 }

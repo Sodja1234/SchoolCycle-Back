@@ -34,6 +34,10 @@ Route::apiResource('/announcements', AnnouncementController::class)->only(['inde
 Route::apiResource('/categories', CategoryController::class)->only(['index', 'show']);
 
 
+//route pour recuperer les articles similaires
+Route::get('/announcements/{announcement}/similar', [AnnouncementController::class, 'getSimilarAnnoucement']);
+
+
 // Routes protégées
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('/announcements', AnnouncementController::class)->except(['index', 'show']);
