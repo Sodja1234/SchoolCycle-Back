@@ -67,10 +67,11 @@ class AnnouncementController extends Controller
         try {
             $announcementSingle = Announcement::findOrFail($id);
             $announcement = new AnnouncementResource($announcementSingle);
+            return $announcement;
 
-            return response()->json([
+            /*return response()->json([
                 'data' => $announcement
-            ]);
+            ]);*/
         } catch (\Exception $exception) {
             return response()->json([
                 'Message' => 'Une erreur est survenue',
