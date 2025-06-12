@@ -5,6 +5,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ToggleFavoriteController;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -26,33 +27,28 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Ajouter ou retirer une annonce aux favoris
     Route::post('/favorites/{announcement}', ToggleFavoriteController::class);
+    Route::apiResource('/announcements', AnnouncementController::class)->except(['index', 'show']);
+    Route::apiResource('/categories', CategoryController::class)->except(['index', 'show']);
+    
+    Route::get('/get_creator_announcement', [AnnouncementController::class, 'getCreatorAnnouncement']);
+    Route::put('/users/update', [UserController::class, 'update']);
+    Route::put('/users/update-password', [UserController::class, 'updatePassword']);
+    Route::get('/users/profile', [UserController::class, 'show']);
 });
 
 
 // Routes publiques
 Route::apiResource('/announcements', AnnouncementController::class)->only(['index', 'show']);
 Route::apiResource('/categories', CategoryController::class)->only(['index', 'show']);
-
-
 //route pour recuperer les articles similaires
 Route::get('/announcements/{announcement}/similar', [AnnouncementController::class, 'getSimilarAnnoucement']);
 
-
-// Routes protégées
-Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('/announcements', AnnouncementController::class)->except(['index', 'show']);
-    Route::apiResource('/categories', CategoryController::class)->except(['index', 'show']);
-});
 
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
-Route::middleware('auth:sanctum')->group(function () {
-    Route::put('/users/update', [UserController::class, 'update']);
-    Route::put('/users/update-password', [UserController::class, 'updatePassword']);
-    Route::get('/users/profile', [UserController::class, 'show']);
-});
+
 
 
 require __DIR__ . '/auth.php';
