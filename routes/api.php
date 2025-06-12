@@ -8,6 +8,7 @@ use App\Http\Controllers\ToggleFavoriteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\TutorController;
 Route::middleware('auth:sanctum')->group(function () {
     //création et récupération d'un chat pour une annonce
     Route::post('/announcements/{announcement}/chats', [ChatController::class, 'getOrCreateChat']);
@@ -52,7 +53,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/users/update', [UserController::class, 'update']);
     Route::put('/users/update-password', [UserController::class, 'updatePassword']);
     Route::get('/users/profile', [UserController::class, 'show']);
+
+      // CRUD pour les tuteurs
+    Route::get('/tutors', [TutorController::class, 'index']);
+    Route::get('/tutors/get', [TutorController::class, 'show']);
+    Route::post('/tutors/create', [TutorController::class, 'store']);
+    Route::put('/tutors/update', [TutorController::class, 'update']);
+    Route::delete('/tutors/delete', [TutorController::class, 'destroy']);
 });
+
 
 
 require __DIR__ . '/auth.php';
