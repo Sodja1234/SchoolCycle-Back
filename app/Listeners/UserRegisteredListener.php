@@ -32,6 +32,7 @@ class UserRegisteredListener
     {
         // Envoi d'un email en utilisant la classe mailable UserRegisteredMail,
         // en lui passant l'utilisateur inscrit ($event->user)
-        $this->mailer->send(new UserRegisteredMail($event->user));
+        $user = $event->user;	
+        $this->mailer->to($user->email)->send(new UserRegisteredMail($user));
     }
 }
