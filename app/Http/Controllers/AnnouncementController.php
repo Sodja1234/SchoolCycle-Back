@@ -34,16 +34,16 @@ class AnnouncementController extends Controller
         //recherche globale sur titre et description
         if($request -> has('search')){
 
-            //on converti en minuscule le contenu de la recherche pour eviter la casse 
+            //on converti en minuscule le contenu de la recherche pour eviter la casse
             $search = strtolower($request->query('search'));
-            
+
             //on ecrit une requete sql  brute pour rechercher sur le tittre et la description
             $query->where(function($q) use ($search){
                 $q->whereRaw('LOWER(title) LIKE ?',['%' .$search. '%'])
                 ->orwhereRaw('LOWER(description) LIKE ?',['%' .$search. '%']);
             });
         }
- 
+
         //pour operation_type
         if ($request->has('operation_type')) {
             $query->whereIn('operation_type', $toArray($request->query('operation_type')));
@@ -220,9 +220,29 @@ class AnnouncementController extends Controller
             ], 500);
         }
     }
+     //methode pour recuperer les annonces de l'utilisateur connecté
+    public function getCreatorAnnouncement(){
+    $user = auth()->user();
 
-    //function pour recuperer les announces similaires
-    public function getSimilarAnnoucement(Request $request, Announcement $announcement)
+    if (!$user) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+    $announcements = Announcement::where('created_by', $user->id)->get();
+    return response()->json(['data' => $announcements]);
+    }
+
+
+public function getUser(request $request, $id){
+    $currentUserId = Auth::user();
+    $isOwner = $currentUserId == $id;
+
+    if($isOwner){
+        return Announcement::where('user_id',$id)->get();
+    }else{
+        return Announcement::where('user_id',$id)->where('status','published')->get();
+    }
+}
+public function getSimilarAnnoucement(Request $request, Announcement $announcement)
     {
         $similar = Announcement::where('category_id', $announcement->category_id)
             ->where('id', '!=', $announcement->id)
@@ -236,6 +256,4 @@ class AnnouncementController extends Controller
             'data' => $similar
         ]);
     }
-
-
 }
