@@ -20,13 +20,14 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): AuthLoginResource | JsonResponse
     {
-        // Recherche de l'utilisateur par son adresse email
+        try {
+            // Recherche de l'utilisateur par son adresse email
         $user = User::where('email', '=', $request->validated('email'))->first();
 
         // Vérifie si l'utilisateur existe et si le mot de passe est correct
         if (!($user instanceof User) || !Hash::check($request->validated('password'), $user->password)) {
             // Si l'utilisateur n'existe pas ou le mot de passe est incorrect, on retourne une erreur 401
-            return response()->json(['message' => 'Unauthorized'], 401);
+            return response()->json(['message' => 'Email ou mot de passe incorrect'], 401);
         }
 
         if(!$user->hasVerifiedEmail()) {
@@ -41,6 +42,10 @@ class AuthenticatedSessionController extends Controller
 
         // Retourne la ressource contenant les infos utilisateur + token
         return new AuthLoginResource($user);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+        
     }
 
     /**
