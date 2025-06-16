@@ -7,7 +7,7 @@ Merci pour votre inscription sur **{{ config('app.name') }}** !
 
 ---
 
-## ✅ Étape 1 : Vérification par lien (Web/Desktop)
+## ✅ Procedure 1 : Vérification par lien (Web/Desktop)
 
 Cliquez sur le bouton ci-dessous pour vérifier automatiquement votre adresse e-mail :
 
@@ -19,7 +19,7 @@ Ce lien expirera dans **60 minutes**.
 
 ---
 
-## 📱 Étape 2 : Code OTP pour vérification mobile
+## 📱 Procedure 2 : Code OTP pour vérification mobile
 
 Si vous utilisez un appareil mobile ou une application ne supportant pas les liens, vous pouvez entrer ce code OTP pour vérifier votre adresse e-mail :
 
