@@ -255,4 +255,20 @@ public function getSimilarAnnoucement(Request $request, Announcement $announceme
             'data' => $similar
         ]);
     }
+
+    public function getUserFavorites(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return response()->json(['error' => 'Utilisateur non trouvé'], 404);
+        }
+        $favoriteIds = $user->favorites()->pluck('announcement_id');
+
+        $announcements = Announcement::with(['photos', 'user', 'category'])
+            ->whereIn('id', $favoriteIds)
+            ->orderBy('created_at', 'desc')
+            ->paginate($request->get('per_page', 12));
+
+        return AnnouncementResource::collection($announcements);
+    }
 }
