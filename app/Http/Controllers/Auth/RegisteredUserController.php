@@ -23,7 +23,7 @@ class RegisteredUserController extends Controller
      *
      * @param Request $request La requête HTTP contenant les données d'inscription
      * @return Response Réponse HTTP sans contenu (204) en cas de succès
-     * 
+     *
      * @throws \Illuminate\Validation\ValidationException Si la validation échoue
      */
     public function store(Request $request): Response|JsonResponse
@@ -31,9 +31,9 @@ class RegisteredUserController extends Controller
         try {
             // ✅ Étape 1 : Validation des données d'entrée
             $validated = Validator::make($request->all(), [
-                'name' => ['required', 'string', 'max:255'], 
-                'email' => ['required', 'string', 'lowercase', 'email:rfc', 'max:255', 'unique:' . User::class], 
-                'password' => ['required', 'confirmed', Rules\Password::defaults()], 
+                'name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'string', 'lowercase', 'email:rfc', 'max:255', 'unique:' . User::class],
+                'password' => ['required', 'confirmed', Rules\Password::defaults()],
                 'role' => 'in:admin,tutor|nullable'
             ], [
                 'name.required' => 'Le nom est obligatoire.',
@@ -53,7 +53,9 @@ class RegisteredUserController extends Controller
             ]);
 
             if ($validated->fails()) {
-                return response()->json($validated->errors()->all(), 400);
+                return response()->json([
+                    'errors' => $validated->errors(),
+                ], 422);
             }
 
             // ✅ Étape 2 : Création de l'utilisateur dans la base de données
@@ -70,7 +72,7 @@ class RegisteredUserController extends Controller
             // ✅ Étape 4 : Réponse vide avec le code HTTP 204 (No Content)
             return response()->noContent();
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
 
     }
