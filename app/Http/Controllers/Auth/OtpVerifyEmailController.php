@@ -23,7 +23,7 @@ class OtpVerifyEmailController extends Controller
         }
 
         if (!$user->email_otp || now()->greaterThan($user->email_otp_expires_at)) {
-            return response()->json(['message' => 'Code OTP expiré ou non généré.'], 400);
+            return response()->json(['message' => 'Code OTP expire ou non genere.'], 400);
         }
 
         if ($request->otp != $user->email_otp) {
@@ -37,7 +37,7 @@ class OtpVerifyEmailController extends Controller
         $user->save();
 
         return response()->json([
-            'message' => 'Email vérifié avec succès.',
+            'message' => 'Email verifie avec succes.',
         ]);
     }
 
@@ -54,7 +54,7 @@ class OtpVerifyEmailController extends Controller
         }
 
         if ($user->email_verified_at) {
-            return response()->json(['message' => 'Email déjà vérifié.'], 400);
+            return response()->json(['message' => 'Email deja verifie.'], 400);
         }
 
         // Générer un nouvel OTP
@@ -67,7 +67,7 @@ class OtpVerifyEmailController extends Controller
         \Mail::to($user->email)->send(new UserRegisteredMail($user, $otp));
 
         return response()->json([
-            'message' => 'Un nouveau code OTP a été envoyé.',
+            'message' => 'Un nouveau code OTP a ete envoye.',
         ]);
     }
 }
