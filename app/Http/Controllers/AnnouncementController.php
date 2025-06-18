@@ -273,3 +273,4 @@ public function getSimilarAnnoucement(Request $request, Announcement $announceme
         return AnnouncementResource::collection($announcements);
     }
 }
+
