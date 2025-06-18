@@ -26,28 +26,52 @@ class RegisteredUserController extends Controller
      * 
      * @throws \Illuminate\Validation\ValidationException Si la validation échoue
      */
-    public function store(Request $request): Response
+    public function store(Request $request): Response|JsonResponse
     {
-        // ✅ Étape 1 : Validation des données d'entrée
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'], // nom obligatoire
-            'email' => ['required', 'string', 'lowercase', 'email:rfc', 'max:255', 'unique:' . User::class], // email valide et unique
-            'password' => ['required', 'confirmed', Rules\Password::defaults()], // mot de passe confirmé (password_confirmation requis)
-            'role' => 'in:admin,tutor|nullable' // rôle facultatif mais limité à "admin" ou "tutor"
-        ]);
+        try {
+            // ✅ Étape 1 : Validation des données d'entrée
+            $validated = Validator::make($request->all(), [
+                'name' => ['required', 'string', 'max:255'], 
+                'email' => ['required', 'string', 'lowercase', 'email:rfc', 'max:255', 'unique:' . User::class], 
+                'password' => ['required', 'confirmed', Rules\Password::defaults()], 
+                'role' => 'in:admin,tutor|nullable'
+            ], [
+                'name.required' => 'Le nom est obligatoire.',
+                'name.string' => 'Le nom doit être une chaine de caracteres.',
+                'name.max' => 'Le nom ne peut pas depasser 255 caracteres.',
 
-        // ✅ Étape 2 : Création de l'utilisateur dans la base de données
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password), // hachage du mot de passe
-            'role' => $request->role ?? 'tutor' // rôle par défaut = "tutor" si non fourni
-        ]);
+                'email.required' => 'L adresse e-mail est obligatoire.',
+                'email.string' => 'L e-mail doit etre une chaîne de caractères.',
+                'email.lowercase' => 'L e-mail doit etre en minuscules.',
+                'email.email' => 'L adresse e-mail doit etre valide.',
+                'email.max' => 'L e-mail ne peut pas dépasser 255 caracteres.',
+                'email.unique' => 'Cet e-mail est deja utilise.',
 
-        // ✅ Étape 3 : Lancement d’un événement personnalisé après l’inscription
-        event(new UserRegisteredEvent($user));
+                'password.required' => 'Le mot de passe est obligatoire.',
+                'password.min' => 'Le mot de passe doit comporter au moins 8 caracteres.',
+                'password.confirmed' => 'La confirmation du mot de passe ne correspond pas.',
+            ]);
 
-        // ✅ Étape 4 : Réponse vide avec le code HTTP 204 (No Content)
-        return response()->noContent();
+            if ($validated->fails()) {
+                return response()->json($validated->errors()->all(), 400);
+            }
+
+            // ✅ Étape 2 : Création de l'utilisateur dans la base de données
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password), // hachage du mot de passe
+                'role' => $request->role ?? 'tutor' // rôle par défaut = "tutor" si non fourni
+            ]);
+
+            // ✅ Étape 3 : Lancement d’un événement personnalisé après l’inscription
+            event(new UserRegisteredEvent($user));
+
+            // ✅ Étape 4 : Réponse vide avec le code HTTP 204 (No Content)
+            return response()->noContent();
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+
     }
 }
