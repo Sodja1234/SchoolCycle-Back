@@ -32,7 +32,12 @@ class AnnouncementResource extends JsonResource
             'category' => new CategoryResource($this->category),
             'photos'=>$this->photos,
             'created_by'=> new UserResource($this->user),
-            'created_at' => Carbon::parse($this->created_at)->diffForHumans()
+            'created_at' => Carbon::parse($this->created_at)->diffForHumans(),
+            'updated_at' => Carbon::parse($this->updated_at)->diffForHumans(),
+
+            //utilisable pour la comparaison de deux date dans le front
+            'created_at_raw' =>$this->created_at,
+            'updated_at_raw' => $this->updated_at
         ];
     }
 }
