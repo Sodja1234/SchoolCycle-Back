@@ -283,3 +283,4 @@ class AnnouncementController extends Controller
         return AnnouncementResource::collection($announcements);
     }
 }
+
