@@ -10,13 +10,14 @@ use App\Notifications\NewAnnouncementNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 
 class AnnouncementController extends Controller
 {
     //function pour voir toutes les annonces disponible
     public function index(Request $request)
     {
-         //si la valeur est null, la methode retourne toutes les annonces
+        //si la valeur est null, la methode retourne toutes les annonces
         //si c'est une chaine de caractere separé par  des virgules,on convertit en tableau
         $toArray = function ($value) {
             if (is_null($value))
@@ -32,15 +33,15 @@ class AnnouncementController extends Controller
         // Filtres dynamiques
 
         //recherche globale sur titre et description
-        if($request -> has('search')){
+        if ($request->has('search')) {
 
             //on converti en minuscule le contenu de la recherche pour eviter la casse
             $search = strtolower($request->query('search'));
 
             //on ecrit une requete sql  brute pour rechercher sur le tittre et la description
-            $query->where(function($q) use ($search){
-                $q->whereRaw('LOWER(title) LIKE ?',['%' .$search. '%'])
-                ->orwhereRaw('LOWER(description) LIKE ?',['%' .$search. '%']);
+            $query->where(function ($q) use ($search) {
+                $q->whereRaw('LOWER(title) LIKE ?', ['%' . $search . '%'])
+                    ->orwhereRaw('LOWER(description) LIKE ?', ['%' . $search . '%']);
             });
         }
 
@@ -56,9 +57,8 @@ class AnnouncementController extends Controller
         }
 
         return AnnouncementResource::collection(
-             $query->orderBy('created_at', 'desc')->paginate(12)
+            $query->orderBy('created_at', 'desc')->paginate(12)
         );
-
     }
 
 
@@ -105,7 +105,8 @@ class AnnouncementController extends Controller
                 'exchange_location_address' => 'string|max:255',
                 'exchange_location_lng' => 'numeric',
                 'exchange_location_lat' => 'numeric',
-                'photos.*' => 'required|image|mimes:jpg,png,gif|max:2040'
+                'photos' => 'required|array|min:1',
+                'photos.*' => 'required|image|mimes:jpg,jpeg,png,gif|max:2048',
             ]);
 
             $announcement = Announcement::create([
@@ -208,6 +209,13 @@ class AnnouncementController extends Controller
                     'Message' => "Vous n'avez pas le droit de supprimer cette annonce",
                 ], 403);
             } else {
+
+                foreach ($announcement->photos as $photo) {
+                    // Supprimer le fichier du disque (storage/app/public/...)
+                    Storage::disk('public')->delete($photo->url);
+                    // Supprimer la photo  dans la base de données
+                    $photo->delete();
+                }
                 $announcement->delete();
                 return response()->json([
                     'Message' => "Annonce supprimer"
@@ -220,29 +228,31 @@ class AnnouncementController extends Controller
             ], 500);
         }
     }
-     //methode pour recuperer les annonces de l'utilisateur connecté
-    public function getCreatorAnnouncement(){
-    $user = auth()->user();
+    //methode pour recuperer les annonces de l'utilisateur connecté
+    public function getCreatorAnnouncement()
+    {
+        $user = auth()->user();
 
-    if (!$user) {
-        return response()->json(['error' => 'Unauthorized'], 401);
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        $announcements = Announcement::where('created_by', $user->id)->get();
+        return response()->json(['data' => $announcements]);
     }
-    $announcements = Announcement::where('created_by', $user->id)->get();
-    return response()->json(['data' => $announcements]);
+
+
+    public function getUser(request $request, $id)
+    {
+        $currentUserId = Auth::user();
+        $isOwner = $currentUserId == $id;
+
+        if ($isOwner) {
+            return Announcement::where('user_id', $id)->get();
+        } else {
+            return Announcement::where('user_id', $id)->where('status', 'published')->get();
+        }
     }
-
-
-public function getUser(request $request, $id){
-    $currentUserId = Auth::user();
-    $isOwner = $currentUserId == $id;
-
-    if($isOwner){
-        return Announcement::where('user_id',$id)->get();
-    }else{
-        return Announcement::where('user_id',$id)->where('status','published')->get();
-    }
-}
-public function getSimilarAnnoucement(Request $request, Announcement $announcement)
+    public function getSimilarAnnoucement(Request $request, Announcement $announcement)
     {
         $similar = Announcement::where('category_id', $announcement->category_id)
             ->where('id', '!=', $announcement->id)
