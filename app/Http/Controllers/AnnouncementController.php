@@ -17,47 +17,69 @@ class AnnouncementController extends Controller
     //function pour voir toutes les annonces disponible
     public function index(Request $request)
     {
-        //si la valeur est null, la methode retourne toutes les annonces
-        //si c'est une chaine de caractere separé par  des virgules,on convertit en tableau
-        $toArray = function ($value) {
-            if (is_null($value))
-                return null;
-            return is_array($value) ? $value : explode(',', $value);
-        };
-
-        //on charge les relations et on recurepere seulement les annonces disponibles
+        //  Base de la requête avec les relations et les filtres d’état général
         $query = Announcement::with(['photos', 'favorites', 'user', 'category'])
             ->where('is_completed', false)
             ->where('is_cancelled', false);
 
-        // Filtres dynamiques
-
-        //recherche globale sur titre et description
-        if ($request->has('search')) {
-
-            //on converti en minuscule le contenu de la recherche pour eviter la casse
+        //  Recherche texte sur le titre ou la description
+        if ($request->filled('search')) {
             $search = strtolower($request->query('search'));
 
-            //on ecrit une requete sql  brute pour rechercher sur le tittre et la description
             $query->where(function ($q) use ($search) {
                 $q->whereRaw('LOWER(title) LIKE ?', ['%' . $search . '%'])
-                    ->orwhereRaw('LOWER(description) LIKE ?', ['%' . $search . '%']);
+                    ->orWhereRaw('LOWER(description) LIKE ?', ['%' . $search . '%']);
             });
         }
 
-        //pour operation_type
-        if ($request->has('operation_type')) {
-            $query->whereIn('operation_type', $toArray($request->query('operation_type')));
+        //  Filtres sur le type d'opération avec condition spéciale pour les ventes
+        if ($request->filled('operation_type')) {
+            $operationTypes = explode(',', $request->query('operation_type'));
+
+            $query->where(function ($q) use ($operationTypes, $request) {
+                foreach ($operationTypes as $type) {
+                    if ($type === 'sale') {
+                        // Si c’est une vente, appliquer aussi les filtres de prix
+                        $q->orWhere(function ($subQ) use ($request) {
+                            $subQ->where('operation_type', 'sale');
+
+                            if ($request->filled('min_price')) {
+                                $subQ->where('price', '>=', $request->query('min_price'));
+                            }
+
+                            if ($request->filled('max_price')) {
+                                $subQ->where('price', '<=', $request->query('max_price'));
+                            }
+                        });
+                    } else {
+                        // Pour les autres types (don, échange), pas de filtre de prix
+                        $q->orWhere('operation_type', $type);
+                    }
+                }
+            });
         }
 
-
-        //pour price
-        if ($request->has('price')) {
-            $query->whereIn('price', $toArray($request->query('price')));
+        // Filtrage par état du produit (ex: neuf, usagé, etc.)
+        if ($request->filled('state')) {
+            $query->whereIn('state', explode(',', $request->query('state')));
         }
 
+        //  Tri dynamique (par défaut sur created_at, en ordre décroissant)
+        $sortField = $request->query('sort_field', 'created_at');
+        $sortDirection = $request->query('sort_direction', 'desc');
+        $query->orderBy($sortField, $sortDirection);
+
+        //  Log de debug pour voir ce qui est reçu comme filtres
+        \Log::info('Filtres reçus', [
+            'operation_type' => $request->input('operation_type'),
+            'state' => $request->input('state'),
+            'min_price' => $request->input('min_price'),
+            'max_price' => $request->input('max_price'),
+        ]);
+
+        //  Retour paginé des résultats via une ressource
         return AnnouncementResource::collection(
-            $query->orderBy('created_at', 'desc')->paginate(12)
+            $query->paginate($request->query('per_page', 12))
         );
     }
 
