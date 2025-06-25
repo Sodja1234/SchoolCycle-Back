@@ -32,7 +32,8 @@ class ToggleFavoriteController extends Controller
                 // Supprime le favori
                 $favorite->delete();
                 return response()->json([
-                    'message' => 'Retirée des favoris.',
+                    'message' => 'Annonce retirée des favoris.',
+                    'is_favorite' => false
                 ]);
             }
 
@@ -43,7 +44,8 @@ class ToggleFavoriteController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'Ajouté aux favoris.',
+                'message' => 'Annonce ajoutée aux favoris.',
+                'is_favorite' => true
             ]);
 
         } catch (\Exception $e) {
