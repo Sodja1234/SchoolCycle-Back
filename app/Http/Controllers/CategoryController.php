@@ -6,6 +6,7 @@ use App\Http\Resources\AnnouncementResource;
 use App\Http\Resources\CategoryResource;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CategoryController extends Controller
 {
@@ -25,13 +26,27 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
+        if($user->role !=='admin'){
+            return response()->json([
+                "Message" => "Vous devez etre administrateur pour faire cette action"
+            ]);
+        }
         $request->validate([
             'name'=>'required|string|max:500',
-            'description'=>'required|string|max:600'
+            'description'=>'required|string|max:600',
+            'photo' => 'required|mimes:jpg,jpeg,png,gif|max:2048'
         ]);
+            if ($request->hasFile('photo')) {
+        $filename = time() . '_' . $request->file('photo')->getClientOriginalName();
+        $path = $request->file('photo')->storeAs('categories', $filename, 'public');
+    } else {
+        return response()->json(['error' => 'Aucune image reçue'], 422);
+    } 
         $category=Category::create([
             'name'=>$request['name'],
-            'description'=>$request['description']
+            'description'=>$request['description'],
+            'photo'=>$path
         ]);
 
         return new CategoryResource($category);
