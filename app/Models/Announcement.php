@@ -40,4 +40,9 @@ class Announcement extends Model
         return $this->hasMany(Photo::class);
     }
 
+    public  function chats()
+    {
+        return $this->hasMany(Chat::class, 'posted_by');
+    }
+
 }

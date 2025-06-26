@@ -11,12 +11,18 @@ class Chat extends Model
     use HasFactory;
 
     protected $fillable = [
-        'created_by', 
+        'created_by',
         'posted_by', //récupération de l'id de l'utilisateur qui a posté le message
         'is_closed',
         'closed_at',
         'close_to',
 
+    ];
+
+    protected $casts = [
+        'is_closed' => 'boolean',
+        'closed_at' => 'datetime',
+        'close_to' => 'datetime',
     ];
 
     public function user()
