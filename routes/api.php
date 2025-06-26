@@ -4,6 +4,7 @@ use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ToggleFavoriteController;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -25,6 +26,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Lister tous les chats d'un utilisateur connecté
     Route::get('/my-chats', [ChatController::class, 'myChats']);
+
+    //Chat existant pour l'utilisateur en fonction d'une annonce
+    Route::get('/announcements/{announcement}/user-chat', [ChatController::class, 'userChatForAnnouncement']);
+
+    //Récupérer le chat pour une annonce spécifique
+    Route::get('/announcements/{announcement}/chats', [ChatController::class, 'chatsForAnnouncement']);
 
     // Ajouter ou retirer une annonce aux favoris
     Route::post('/favorites/{announcement}', ToggleFavoriteController::class);
