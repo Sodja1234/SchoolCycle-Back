@@ -23,12 +23,12 @@ class Message extends Model
         return $this ->belongsTo(Chat::class, 'conversation');
     }
 
-    public function sender()
+    public function senderUser()
     {
         return $this -> belongsTo(User::class, 'sender');
     }
 
-    public function receiver()
+    public function receiverUser()
     {
         return $this -> belongsTo(User::class, 'receiver');
     }
