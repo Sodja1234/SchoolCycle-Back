@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TutorController;
+use Illuminate\Support\Facades\Hash;
 Route::middleware('auth:sanctum')->group(function () {
     //création et récupération d'un chat pour une annonce
     Route::post('/announcements/{announcement}/chats', [ChatController::class, 'getOrCreateChat']);
@@ -46,6 +47,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/reports', [ReportController::class, 'store']);
     Route::get('/reports', [ReportController::class, 'index']);
+    Route::get('/users/get', [UserController::class, 'show']);
+      // CRUD pour les tuteurs
+    Route::get('/tutors', [TutorController::class, 'index']);
+    Route::get('/tutors/get', [TutorController::class, 'show']);
+    Route::post('/tutors/create', [TutorController::class, 'store']);
+    Route::put('/tutors/update', [TutorController::class, 'update']);
+    Route::delete('/tutors/delete', [TutorController::class, 'destroy']);
 });
 
 
