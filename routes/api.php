@@ -58,7 +58,21 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 // Routes publiques
-Route::apiResource('/announcements', AnnouncementController::class)->only(['index', 'show']);
+//Routes liées à la recuperation des annonces ======================================================================================
+// Annonces publiques & annonces de l'utilisateur specifique
+Route::get('announcements/public/{userId?}', [AnnouncementController::class, 'index'])
+    ->where('userId', '[0-9]+')
+    ->name('announcements.public.index');
+
+Route::apiResource('announcement/public/single', AnnouncementController::class)
+    ->only(['show']);
+
+// Route utilisateur connecté
+Route::middleware('auth:sanctum')->get('announcements/user', [AnnouncementController::class, 'index'])
+    ->name('announcements.user.index');
+//End ==============================================================================================================================
+
+
 Route::apiResource('/categories', CategoryController::class)->only(['index', 'show']);
 //route pour recuperer les articles similaires
 Route::get('/announcements/{announcement}/similar', [AnnouncementController::class, 'getSimilarAnnoucement']);
