@@ -40,7 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('/categories', CategoryController::class)->except(['index', 'show']);
 
     Route::get('/get_creator_announcement', [AnnouncementController::class, 'getCreatorAnnouncement']);
-    Route::get('my_favorites', [AnnouncementController::class, 'getUserFavorites']);
+    Route::get('annoncements/favorites', [AnnouncementController::class, 'getUserFavorites']);
     Route::put('/users/update', [UserController::class, 'update']);
     Route::put('/users/update-password', [UserController::class, 'updatePassword']);
     Route::get('/users/profile', [UserController::class, 'show']);
