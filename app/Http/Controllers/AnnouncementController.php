@@ -286,7 +286,9 @@ class AnnouncementController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
         $announcements = Announcement::where('created_by', $user->id)->get();
-        return response()->json(['data' => $announcements]);
+        return response()->json([
+            "data"=> AnnouncementResource::collection($announcements)
+        ]);
     }
 
 
