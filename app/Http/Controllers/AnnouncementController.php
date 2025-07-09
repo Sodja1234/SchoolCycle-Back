@@ -253,7 +253,7 @@ class AnnouncementController extends Controller
 
         try {
 
-            if ($user->id !== $announcement->created_by) {
+            if ($user->id !== $announcement->created_by && $user->role !=='admin') {
                 return response()->json([
                     'Message' => "Vous n'avez pas le droit de supprimer cette annonce",
                 ], 403);
