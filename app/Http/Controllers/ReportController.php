@@ -42,6 +42,8 @@ class ReportController extends Controller
     public function index()
     {
         $reports = Report::with(['user', 'announcement'])->latest()->get();
-        return ReportResource::collection($reports);
+        return response()->json([
+            "data"=> ReportResource::collection($reports)
+        ]);
     }
 }
