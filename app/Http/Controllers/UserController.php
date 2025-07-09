@@ -109,4 +109,12 @@ class UserController extends Controller
         return response()->json(["message" => "Mot de passe mis à jour avec succès."], 200);
     }
 
+
+    public function index(Request $request){
+        $user = User::paginate(10);
+        return response()->json([
+            "data"=> $user
+        ]);
+    }
+
 }
