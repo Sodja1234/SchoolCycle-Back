@@ -15,6 +15,7 @@ class Report extends Model
         'announcement_id',
         'motif',
         'detail',
+        'created_at'
     ];
 
     // Relation avec l'utilisateur qui a signalé
