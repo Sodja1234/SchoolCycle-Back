@@ -14,74 +14,101 @@ use Illuminate\Support\Facades\Storage;
 
 class AnnouncementController extends Controller
 {
-    //function pour voir toutes les annonces disponible
-    public function index(Request $request)
-    {
-        //  Base de la requête avec les relations et les filtres d’état général
-        $query = Announcement::with(['photos', 'favorites', 'user', 'category'])
-            ->where('is_completed', false)
-            ->where('is_cancelled', false);
-
-        //  Recherche texte sur le titre ou la description
-        if ($request->filled('search')) {
-            $search = strtolower($request->query('search'));
-
-            $query->where(function ($q) use ($search) {
-                $q->whereRaw('LOWER(title) LIKE ?', ['%' . $search . '%'])
-                    ->orWhereRaw('LOWER(description) LIKE ?', ['%' . $search . '%']);
-            });
-        }
-
-        //  Filtres sur le type d'opération avec condition spéciale pour les ventes
-        if ($request->filled('operation_type')) {
-            $operationTypes = explode(',', $request->query('operation_type'));
-
-            $query->where(function ($q) use ($operationTypes, $request) {
-                foreach ($operationTypes as $type) {
-                    if ($type === 'sale') {
-                        // Si c’est une vente, appliquer aussi les filtres de prix
-                        $q->orWhere(function ($subQ) use ($request) {
-                            $subQ->where('operation_type', 'sale');
-
-                            if ($request->filled('min_price')) {
-                                $subQ->where('price', '>=', $request->query('min_price'));
-                            }
-
-                            if ($request->filled('max_price')) {
-                                $subQ->where('price', '<=', $request->query('max_price'));
-                            }
-                        });
-                    } else {
-                        // Pour les autres types (don, échange), pas de filtre de prix
-                        $q->orWhere('operation_type', $type);
-                    }
-                }
-            });
-        }
-
-        // Filtrage par état du produit (ex: neuf, usagé, etc.)
-        if ($request->filled('state')) {
-            $query->whereIn('state', explode(',', $request->query('state')));
-        }
-
-        //  Tri dynamique (par défaut sur created_at, en ordre décroissant)
-        $sortField = $request->query('sort_field', 'created_at');
-        $sortDirection = $request->query('sort_direction', 'desc');
-        $query->orderBy($sortField, $sortDirection);
-
-        //  Log de debug pour voir ce qui est reçu comme filtres
-        \Log::info('Filtres reçus', [
-            'operation_type' => $request->input('operation_type'),
-            'state' => $request->input('state'),
-            'min_price' => $request->input('min_price'),
-            'max_price' => $request->input('max_price'),
-        ]);
-
-        //  Retour paginé des résultats via une ressource
-        return AnnouncementResource::collection(
-            $query->paginate($request->query('per_page', 12))
-        );
-    }
+     //function pour voir toutes les annonces disponibles
+     public function index(Request $request, $userId = null)
+     {
+         // Initialisation de la requête avec les relations optimisées
+         $query = Announcement::with([
+             'photos' => function($query) {
+                 $query->select('id', 'announcement_id', 'url')
+                     ->orderBy('created_at')
+                     ->limit(1); // On ne prend que la première photo
+             },
+             'favorites',
+             'user',
+             'category'
+         ]);
+ 
+         // Détermination du scope des annonces
+         if ($userId) {
+             // Cas 1: Annonces d'un utilisateur spécifique
+             $query->where('created_by', $userId);
+         } elseif ($request->routeIs('announcements.user.index')) {
+             // Cas 2: Annonces de l'utilisateur connecté
+             $user = auth()->user();
+ 
+             if (!$user) {
+                 return response()->json([
+                     'message' => 'Accès non autorisé',
+                     'error' => 'Authentification requise'
+                 ], 401);
+             }
+ 
+             $query->where('created_by', $user->id);
+         } else {
+             // Cas 3: Annonces publiques (par défaut)
+             $query->where('is_completed', false)
+                 ->where('is_cancelled', false);
+         }
+ 
+         // Filtre: Recherche texte (titre ou description)
+         if ($request->filled('search')) {
+             $search = strtolower($request->query('search'));
+             $query->where(function($q) use ($search) {
+                 $q->whereRaw('LOWER(title) LIKE ?', ['%'.$search.'%'])
+                     ->orWhereRaw('LOWER(description) LIKE ?', ['%'.$search.'%']);
+             });
+         }
+ 
+         // Filtre: Type d'opération (vente/don/échange)
+         if ($request->filled('operation_type')) {
+             $operationTypes = explode(',', $request->query('operation_type'));
+ 
+             $query->where(function($q) use ($operationTypes, $request) {
+                 foreach ($operationTypes as $type) {
+                     if ($type === 'sale') {
+                         $q->orWhere(function($subQuery) use ($request) {
+                             $subQuery->where('operation_type', 'sale');
+ 
+                             // Filtres prix pour les ventes
+                             if ($request->filled('min_price')) {
+                                 $subQuery->where('price', '>=', $request->query('min_price'));
+                             }
+                             if ($request->filled('max_price')) {
+                                 $subQuery->where('price', '<=', $request->query('max_price'));
+                             }
+                         });
+                     } else {
+                         $q->orWhere('operation_type', $type);
+                     }
+                 }
+             });
+         }
+ 
+         // Filtre: État du produit
+         if ($request->filled('state')) {
+             $query->whereIn('state', explode(',', $request->query('state')));
+         }
+ 
+         // Filtre: Statut d'achèvement ou annulation
+         if ($request->filled('is_completed')) {
+             $query->where('is_completed', (bool) $request->query('is_completed'));
+         }
+ 
+         if ($request->filled('is_cancelled')) {
+             $query->where('is_cancelled', (bool) $request->query('is_cancelled'));
+         }
+ 
+         // Tri dynamique
+         $sortField = $request->query('sort_field', 'created_at');
+         $sortDirection = $request->query('sort_direction', 'desc');
+         $query->orderBy($sortField, $sortDirection);
+ 
+         // Pagination et retour des résultats
+         return AnnouncementResource::collection(
+             $query->paginate($request->query('per_page', 12))
+         );
+     }
 
 
     public function show($id)
@@ -226,7 +253,7 @@ class AnnouncementController extends Controller
 
         try {
 
-            if ($user->id !== $announcement->created_by) {
+            if ($user->id !== $announcement->created_by && $user->role !=='admin') {
                 return response()->json([
                     'Message' => "Vous n'avez pas le droit de supprimer cette annonce",
                 ], 403);
@@ -259,7 +286,9 @@ class AnnouncementController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
         $announcements = Announcement::where('created_by', $user->id)->get();
-        return response()->json(['data' => $announcements]);
+        return response()->json([
+            "data"=> AnnouncementResource::collection($announcements)
+        ]);
     }
 
 
