@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Auth;
 use App\Events\UserRegistered; // (optionnel, semble inutilisé ici)
 use App\Events\UserRegisteredEvent; // Événement personnalisé déclenché après l'inscription
 use App\Http\Controllers\Controller;
+use App\Models\Tutor;
 use App\Models\User; // Modèle User
 use Illuminate\Auth\Events\Registered; // Événement standard Laravel (non utilisé ici)
 use Illuminate\Http\JsonResponse;
@@ -65,6 +66,12 @@ class RegisteredUserController extends Controller
                 'password' => Hash::make($request->password), // hachage du mot de passe
                 'role' => $request->role ?? 'tutor' // rôle par défaut = "tutor" si non fourni
             ]);
+
+            if($user->role == 'tutor') {
+                $tutor = Tutor::create([
+                    'user_id' => $user->id
+                ]);
+            }
 
             // ✅ Étape 3 : Lancement d’un événement personnalisé après l’inscription
             event(new UserRegisteredEvent($user));
