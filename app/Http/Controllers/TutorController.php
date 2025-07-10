@@ -40,26 +40,22 @@ class TutorController extends Controller
     // Crée un nouveau tuteur
    public function store(Request $request)
     {
-        $user = $request->user();
+         $user = auth()->user();
 
         if ($user->role !== "tutor") {
-            return response()->json(["message" => "Vous n'êtes pas tuteur"]);
-        }
-
-        if (Tutor::where('user_id', $user->id)->exists()) {
-            return response()->json(['message' => 'Vous êtes déjà tuteur']);
+            return response()->json(["message" => "Vous n'êtes pas tuteur"], 403);
         }
 
         $validator = Validator::make($request->all(), [
             'telephone' => 'required|string|max:255',
             'profession' => 'required|string|max:255',
             'adresse' => 'required|string|max:255',
-            'bio' => 'string|max:1000',
-            'avatar' => 'image|mimes:jpeg,png,jpg,gif|max:4096',
+            'bio' => 'nullable|string|max:1000',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:4096',
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors());
+            return response()->json($validator->errors(), 422);
         }
 
         $data = $validator->validated();
@@ -69,12 +65,15 @@ class TutorController extends Controller
             $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
         }
 
-        $tutor = Tutor::create($data);
+        $tutor = Tutor::updateOrCreate(
+            ['user_id' => $user->id],
+            $data
+        );
 
         return new TutorResource($tutor);
-    }
-    // Met à jour les informations d'un tuteur existant
-    public function update(Request $request){
+}
+// Met à jour les informations d'un tuteur existant
+public function update(Request $request){
         $user = $request->user();
         // Vérifie si l'utilisateur est authentifié
         if (!$user){
