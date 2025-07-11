@@ -34,6 +34,10 @@ class AuthenticatedSessionController extends Controller
             return response()->json(['message' => 'Votre adresse email n\'est pas encore verifiée.'], 401);
         }
 
+        if($user->status == 0) {
+            return response()->json(['message' => 'Votre compte a été suspendu.'], 401);
+        }
+
         // Génération d’un token d’authentification via Laravel Sanctum
         $token = $user->createToken($user->email)->plainTextToken;
 
@@ -45,7 +49,7 @@ class AuthenticatedSessionController extends Controller
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
-        
+
     }
 
     /**
