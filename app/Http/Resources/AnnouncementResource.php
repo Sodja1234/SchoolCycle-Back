@@ -37,7 +37,8 @@ class AnnouncementResource extends JsonResource
 
             //utilisable pour la comparaison de deux date dans le front
             'created_at_raw' =>$this->created_at,
-            'updated_at_raw' => $this->updated_at
+            'updated_at_raw' => $this->updated_at,
+            'deleted_at' =>$this->deleted_at 
         ];
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
@@ -111,10 +112,9 @@ class UserController extends Controller
 
 
     public function index(Request $request){
-        $user = User::paginate(10);
-        return response()->json([
-            "data"=> $user
-        ]);
+        $users = User::paginate(10);
+        
+        return UserResource::collection($users);
     }
 
 }
