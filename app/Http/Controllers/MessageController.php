@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\MessageSent;
 use App\Http\Resources\MessageRessource;
 use App\Models\Chat;
 use App\Models\Message;
@@ -36,13 +37,27 @@ class MessageController extends Controller
         $receiver = (Auth::id() === $chat -> created_by && $chat->announcement)
             ? $chat -> announcement->created_by: $chat->created_by;
 
+        // Gérer le cas où le contenu est doublement encodé en JSON
+        $content = $request->content;
+        
+        // Vérifier si le contenu est un JSON encodé
+        if (is_string($content) && json_decode($content) !== null) {
+            $decoded = json_decode($content, true);
+            // Si c'est un objet avec une propriété 'content', extraire le contenu
+            if (is_array($decoded) && isset($decoded['content'])) {
+                $content = $decoded['content'];
+            }
+        }
+        
         $message = $chat->messages()->create([
             'conversation' => $chat ->id,
             'sender' => Auth::id(),
             'receiver' => $receiver,
-            'content' => $request -> content,
+            'content' => (string) $content,
         ]);
 
+        // Diffuser l'événement en temps réel
+        broadcast(new MessageSent($message))->toOthers();
 
         return response() -> json($message, 201);
     }
