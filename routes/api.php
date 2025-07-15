@@ -58,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Route pour bloquer debloquer l'utilisateur
     Route::patch('/user/toggle-status/{id}', \App\Http\Controllers\ToggleUserStatusController::class);
+    Route::get('/chats/{chat}/contact-info', [\App\Http\Controllers\ChatController::class, 'contactInfo']);
 });
 
 
