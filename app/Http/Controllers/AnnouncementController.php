@@ -99,6 +99,14 @@ class AnnouncementController extends Controller
              $query->where('is_cancelled', (bool) $request->query('is_cancelled'));
          }
  
+        if ($request->filled('deleted_at')) {
+            $deleted = $request->query('deleted_at');
+
+            if ($deleted === 'true') {
+                $query->onlyTrashed();
+            } 
+        }
+ 
          // Tri dynamique
          $sortField = $request->query('sort_field', 'created_at');
          $sortDirection = $request->query('sort_direction', 'desc');
