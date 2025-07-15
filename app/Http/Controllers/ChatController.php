@@ -190,4 +190,50 @@ class ChatController extends Controller
         }
         return ChatRessource::collection($chat);
     }
+
+    public function contactInfo(Chat $chat)
+    {
+        $userId = Auth::id();
+
+        // Déterminer l'autre participant
+        if ($chat->created_by == $userId) {
+            $contact = $chat->announcement->user; // user() = créateur de l'annonce
+        } else {
+            $contact = $chat->user; // user() = créateur du chat
+        }
+
+        // Historique des annonces discutées entre ces deux utilisateurs
+        $history = Chat::where(function ($q) use ($userId, $contact) {
+                $q->where('created_by', $userId)
+                  ->whereHas('announcement', function ($q2) use ($contact) {
+                      $q2->where('created_by', $contact->id);
+                  });
+            })
+            ->orWhere(function ($q) use ($userId, $contact) {
+                $q->where('created_by', $contact->id)
+                  ->whereHas('announcement', function ($q2) use ($userId) {
+                      $q2->where('created_by', $userId);
+                  });
+            })
+            ->with('announcement:id,title')
+            ->get()
+            ->pluck('announcement')
+            ->unique('id')
+            ->values()
+            ->map(function ($a) {
+                return [
+                    'announcement_id' => $a->id,
+                    'title' => $a->title,
+                ];
+            });
+
+        return response()->json([
+            'contact' => [
+                'id' => $contact->id,
+                'name' => $contact->name,
+                'email' => $contact->email,
+            ],
+            'history' => $history,
+        ]);
+    }
 }
