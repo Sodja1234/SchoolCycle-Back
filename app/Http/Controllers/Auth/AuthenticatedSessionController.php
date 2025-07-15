@@ -34,7 +34,7 @@ class AuthenticatedSessionController extends Controller
             return response()->json(['message' => 'Votre adresse email n\'est pas encore verifiée.'], 401);
         }
 
-        if($user->status == 0) {
+        if($user->state !== 1) {
             return response()->json(['message' => 'Votre compte a été suspendu.'], 401);
         }
 
