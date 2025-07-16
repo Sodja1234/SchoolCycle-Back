@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Report;
 use Illuminate\Http\Request;
 use App\Http\Resources\ReportResource;
+use GuzzleHttp\Psr7\Response;
+use Illuminate\Support\Facades\Auth;
 
 class ReportController extends Controller
 {
@@ -41,9 +43,29 @@ class ReportController extends Controller
      */
     public function index()
     {
-        $reports = Report::with(['user', 'announcement'])->latest()->get();
-        return response()->json([
-            "data"=> ReportResource::collection($reports)
-        ]);
+        $reports = Report::with(['user', 'announcement'])->latest()->paginate(5);
+        return  ReportResource::collection($reports);
+    }
+
+    public function destroy(Report $report){
+        $user = Auth::user();
+        try {
+            if ($user->role !=='admin') {
+                return response()->json([
+                    'Message' => "Vous n'avez pas le droit de supprimer",
+                ], 403);
+            }
+            else{
+                $report->delete();
+                return Response()->json([
+                    "Message"=>"[]"
+                ]);
+            }
+        }catch(\Exception $exception){
+            return response()->json([
+                'Message' => "Une erreur est survenue lors de la suppression",
+                'Erreur' => $exception->getMessage()
+            ], 500);
+        }
     }
 }

@@ -47,6 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/reports', [ReportController::class, 'store']);
     Route::get('/reports', [ReportController::class, 'index']);
+    Route::apiResource('/report',ReportController::class);
     Route::get('/users/get', [UserController::class, 'show']);
     Route::get('/users', [UserController::class, 'index']);
       // CRUD pour les tuteurs
