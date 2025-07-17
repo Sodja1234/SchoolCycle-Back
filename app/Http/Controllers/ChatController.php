@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class ChatController extends Controller
 {
@@ -26,6 +27,20 @@ class ChatController extends Controller
         // On empêche la création d'un chat si l'utilisateur est le même que celui qui a posté l'annonce
         if ($created_by == $announcement->created_by) {
             return response()->json(['error' => 'Vous ne pouvez pas créer un chat avec vous-même'], 403);
+        }
+
+        // Empêcher la création d'un chat si l'annonce est clôturée
+        if ($announcement->is_completed) {
+            return response()->json(['error' => "Impossible de créer un chat : l'annonce est clôturée."], 403);
+        }
+
+        // Empêcher la création d'un chat si un chat fermé existe déjà pour cette annonce et cet utilisateur
+        $closedChat = Chat::where('posted_by', $announcement->id)
+            ->where('created_by', $created_by)
+            ->where('is_closed', true)
+            ->first();
+        if ($closedChat) {
+            return response()->json(['error' => "Vous avez déjà eu une conversation clôturée pour cette annonce."], 403);
         }
 
         // Recherche d'un chat existant
@@ -133,23 +148,39 @@ class ChatController extends Controller
         return response()->json(['message' => 'Les autres chats ont été fermés et celui-ci sera fermé dans 30 jours'], 200);
     }
 
-    public function mychats()
+    public function mychats(Request $request)
     {
         $created_by = Auth::id();
 
+        $perPage = $request->input('per_page', 10); 
+        $search = $request->input('search'); // Pour la recherche 
 
-        // On charge les messages et l'annonce associée
-        $chat = Chat::with(['announcement', 'messages'])
-            ->where(function ($query) use ($created_by) {
+        // Construction de la requête de base
+        $query = Chat::with(['announcement', 'messages'])
+            ->where(function (
+                $query) use ($created_by) {
                 $query->where('created_by', $created_by)
-                      ->orWhereHas('announcement', function ($q) use ($created_by) {
-                          $q->where('created_by', $created_by);
-                      });
-            })
-            ->latest()
-            ->distinct()
-            ->get();
-        return ChatRessource::collection($chat);
+                    ->orWhereHas('announcement', function ($q) use ($created_by) {
+                        $q->where('created_by', $created_by);
+                    });
+            });
+
+        // Tri par date du dernier message (descendant)
+        $query = $query->withCount(['messages as last_message_at' => function ($q) {
+            $q->select(DB::raw('MAX(created_at)'));
+        }])->orderByDesc('last_message_at');
+
+        // Filtrage par titre d'annonce si search est présent
+        if ($search) {
+            $query = $query->whereHas('announcement', function ($q) use ($search) {
+                $q->where('title', 'like', '%' . $search . '%');
+            });
+        }
+
+        // Pagination
+        $chats = $query->paginate($perPage);
+
+        return ChatRessource::collection($chats);
     }
 
     public function chatsForAnnouncement(Announcement $announcement)
@@ -232,6 +263,12 @@ class ChatController extends Controller
                 'id' => $contact->id,
                 'name' => $contact->name,
                 'email' => $contact->email,
+            ],
+            'announcement' => [
+                'id' => $chat->announcement->id,
+                'title' => $chat->announcement->title,
+                'description' => $chat->announcement->description,
+                'price' => $chat->announcement->price,
             ],
             'history' => $history,
         ]);
