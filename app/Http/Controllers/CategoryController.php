@@ -84,15 +84,25 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category)
     {
-            $request->validate([
-            'name'=>'required|string|max:500',
-            'description'=>'required|string|max:600'
-        ]);
-        $category->update([
-            'name'=>$request['name'],
-            'description'=>$request['description']
-        ]);
-        return new CategoryResource($category);
+        try{
+        $user = Auth::user();
+        if($user->role !=='admin'){
+            return response()->json([
+                "Message" => "Vous devez etre administrateur pour faire cette action"
+            ]);
+        }else{
+            $validated = $request->validate([
+                'name'=>'required|string|max:500',
+                'description'=>'required|string|max:600'
+            ]);
+            $category->update($validated);
+            return new CategoryResource($category);
+        }
+        }catch(\Exception $e){
+            return response()->json([
+                "Message"=> $e
+            ]);
+        }
     }
 
     /**
