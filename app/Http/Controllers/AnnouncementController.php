@@ -11,10 +11,26 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Report;
 
 class AnnouncementController extends Controller
 {
-     //function pour voir toutes les annonces disponibles
+
+    /**
+     * @OA\Get(
+     *     path="/api/announcements",
+     *     tags={"Annonces"},
+     *     summary="Liste des annonces disponibles",
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste récupérée avec succès",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref="#/components/schemas/Announcement")
+     *         )
+     *     )
+     * )
+     */
      public function index(Request $request, $userId = null)
      {
          // Initialisation de la requête avec les relations optimisées
@@ -47,8 +63,14 @@ class AnnouncementController extends Controller
              $query->where('created_by', $user->id);
          } else {
              // Cas 3: Annonces publiques (par défaut)
-             $query->where('is_completed', false)
-                 ->where('is_cancelled', false);
+            // Filtre: Statut d'achèvement ou annulation
+         if ($request->filled('is_completed')) {
+             $query->where('is_completed', (bool) $request->query('is_completed'));
+         }
+ 
+         if ($request->filled('is_cancelled')) {
+             $query->where('is_cancelled', (bool) $request->query('is_cancelled'));
+         }
          }
  
          // Filtre: Recherche texte (titre ou description)
@@ -118,7 +140,31 @@ class AnnouncementController extends Controller
          );
      }
 
-
+    /**
+ * @OA\Get(
+ *     path="/api/announcements/single/{id}",
+ *     tags={"Annonces"},
+ *     summary="Voir les détails d'une annonce",
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID de l'annonce",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Annonce récupérée avec succès",
+ *         @OA\JsonContent(
+ *             ref="#/components/schemas/Announcement"
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Annonce non trouvée"
+ *     )
+ * )
+ */
     public function show($id)
     {
         try {
@@ -137,8 +183,62 @@ class AnnouncementController extends Controller
         }
     }
 
+    /**
+     *     security={{ "bearerAuth": {} }},
 
-    //function pour la creation d'une annonce
+
+ * @OA\SecurityScheme(
+ *     securityScheme="bearerAuth",
+ *     type="http",
+ *     scheme="bearer",
+ *     bearerFormat="Token"
+ * )
+ 
+ * @OA\Post(
+ *     path="/api/announcements",
+ *     tags={"Annonces"},
+ *     summary="Crée une annonce",
+ *     @OA\RequestBody(
+ *         required=true,
+ *          @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *              @OA\Schema(
+ *             required={"title", "category_id", "operation_type", "state", "exchange_location_address", "exchange_location_lng", "exchange_location_lat"},
+ *             @OA\Property(property="title", type="string", example="Titre de l'annonce"),
+ *             @OA\Property(property="description", type="string", example="Une description"),
+ *             @OA\Property(property="category_id", type="integer", example=1),
+ *             @OA\Property(property="operation_type", type="string", example="vente"),
+ *             @OA\Property(property="state", type="string", example="neuf"),
+ *             @OA\Property(property="price", type="string", example="50000"),
+ *             @OA\Property(property="exchange_location_address", type="string", example="Kinshasa, Gombe"),
+ *             @OA\Property(property="exchange_location_lng", type="number", format="float", example=15.308889),
+ *             @OA\Property(property="exchange_location_lat", type="number", format="float", example=-4.325),
+ *             @OA\Property(property="created_by", type="integer", example=2),
+ *  *                 @OA\Property(
+ *                     property="photo",
+ *                     type="string",
+ *                     format="binary",
+ *                     description="Image de l'annonce (jpg, jpeg, png, gif, 2Mo max.)"
+ *                 )
+ *         )  
+ *        )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Annonce créée avec succès",
+ *         @OA\JsonContent(ref="#/components/schemas/Announcement")
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Non authentifié"
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Données invalides"
+ *     )
+ * )
+ */
+
     public function store(Request $request)
     {
         //on recupere le user connecter
@@ -216,7 +316,52 @@ class AnnouncementController extends Controller
     }
 
 
-    //function pour mettre à une annonce
+    /**
+     *     security={{ "bearerAuth": {} }},
+ * @OA\Put(
+ *     path="/api/announcements/{id}",
+ *     tags={"Annonces"},
+ *     summary="Modifié une annonce",
+ *     @OA\RequestBody(
+ *         required=true,
+ *          @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *              @OA\Schema(
+ *             required={"title", "category_id", "operation_type", "state", "exchange_location_address", "exchange_location_lng", "exchange_location_lat"},
+ *             @OA\Property(property="title", type="string", example="Titre de l'annonce"),
+ *             @OA\Property(property="description", type="string", example="Une description"),
+ *             @OA\Property(property="category_id", type="integer", example=1),
+ *             @OA\Property(property="operation_type", type="string", example="vente"),
+ *             @OA\Property(property="state", type="string", example="neuf"),
+ *             @OA\Property(property="price", type="string", example="50000"),
+ *             @OA\Property(property="exchange_location_address", type="string", example="Kinshasa, Gombe"),
+ *             @OA\Property(property="exchange_location_lng", type="number", format="float", example=15.308889),
+ *             @OA\Property(property="exchange_location_lat", type="number", format="float", example=-4.325),
+ *             @OA\Property(property="created_by", type="integer", example=2),
+ *  *                 @OA\Property(
+ *                     property="photo",
+ *                     type="string",
+ *                     format="binary",
+ *                     description="Image de l'annonce (jpg, jpeg, png, gif, 2Mo max.)"
+ *                 )
+ *         )  
+ *        )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Annonce Modifié avec succès",
+ *         @OA\JsonContent(ref="#/components/schemas/Announcement")
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Non authentifié"
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Données invalides"
+ *     )
+ * )
+ */
     public function update(Request $request, Announcement $announcement)
     {
         $user = Auth::user();
@@ -253,8 +398,43 @@ class AnnouncementController extends Controller
             ]);
         }
     }
+/**
+*     security={{ "bearerAuth": {} }},
+ * @OA\Delete(
+ *     path="/api/announcements/{id}",
+ *     tags={"Annonces"},
+ *     summary="Supprimer une annonce",
+ *     security={{ "bearerAuth": {} }},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID de l'annonce à supprimer",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Annonce supprimée avec succès",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Annonce supprimée avec succès")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Non autorisé"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Annonce non trouvée"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Non authentifié"
+ *     )
+ * )
+ */
 
-    //funnction pour supprimer une annonce
     public function destroy(Announcement $announcement)
     {
         $user = Auth::user();
@@ -273,6 +453,7 @@ class AnnouncementController extends Controller
                     // Supprimer la photo  dans la base de données
                     $photo->delete();
                 }
+                Report::where('announcement_id', $announcement->id)->delete();
                 $announcement->delete();
                 return response()->json([
                     'Message' => "Annonce supprimer"
@@ -285,7 +466,22 @@ class AnnouncementController extends Controller
             ], 500);
         }
     }
-    //methode pour recuperer les annonces de l'utilisateur connecté
+  
+/**
+* @OA\Get(
+*     path="/api/get_creator_announcement",
+ *     tags={"Annonces"},
+ *     summary="Récuperé les annonces de l'utilisateur connecté",
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste récupérée avec succès",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref="#/components/schemas/Announcement")
+     *         )
+     *     )
+     * )
+     */
     public function getCreatorAnnouncement()
     {
         $user = auth()->user();
@@ -311,8 +507,34 @@ class AnnouncementController extends Controller
             return Announcement::where('user_id', $id)->where('status', 'published')->get();
         }
     }
-    public function getSimilarAnnoucement(Request $request, Announcement $announcement)
+
+
+            /**
+     * @OA\Get(
+     *     path="/api/announcements/{id}/similars",
+     *     tags={"Annonces"},
+     *     summary="Récuperé les annonces similaire",
+     * *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         description="ID de l'annonce",
+ *         required=true,
+ *         @OA\Schema(type="integer", format="int64")
+ *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste récupérée avec succès",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref="#/components/schemas/Announcement")
+     *         )
+     *     )
+     * )
+     */
+    public function getSimilarAnnoucements(Request $request, $id)
     {
+        $id  = Announcement::findOrFail();
+        $announcement = $id;
         $similar = Announcement::where('category_id', $announcement->category_id)
             ->where('id', '!=', $announcement->id)
             ->latest()
@@ -326,6 +548,21 @@ class AnnouncementController extends Controller
         ]);
     }
 
+        /**
+     * @OA\Get(
+     *     path="/api/annoncements/favorites",
+     *     tags={"Annonces"},
+     *     summary="Récuperé les annonces en  favoris d'un utilisateur",
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste récupérée avec succès",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref="#/components/schemas/Announcement")
+     *         )
+     *     )
+     * )
+     */
     public function getUserFavorites(Request $request)
     {
         $user = auth()->user();
