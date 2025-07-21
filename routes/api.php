@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TutorController;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Hash;
 Route::middleware('auth:sanctum')->group(function () {
     //création et récupération d'un chat pour une annonce
@@ -92,3 +93,8 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 
 
 require __DIR__ . '/auth.php';
+
+//Route pour l'authentification des websockets
+Route::middleware('auth:sanctum')->post('/broadcasting/auth', function (Request $request) {
+    return Broadcast::auth($request);
+});
