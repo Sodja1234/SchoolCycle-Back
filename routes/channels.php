@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Log;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,10 +21,16 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 // Canal privé pour les chats
 Broadcast::channel('chat.{chatId}', function ($user, $chatId) {
     $chat = \App\Models\Chat::find($chatId);
-    
-    if (!$chat) {
+    Log::info('Broadcast policy', [
+        'user_id' => $user->id,
+        'chat_id' => $chatId,
+        'chat_created_by' => $chat?->created_by,
+        'announcement_created_by' => $chat?->announcement?->created_by,
+    ]);
+    if (!$chat || !$chat->announcement) {
         return false;
     }
+    
     
     // L'utilisateur peut écouter s'il est le créateur du chat ou le créateur de l'annonce
     return $user->id === $chat->created_by || $user->id === $chat->announcement->created_by;

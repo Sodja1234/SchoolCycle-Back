@@ -6,28 +6,22 @@ return [
 
     'connections' => [
 
-        'reverb' => [
-            'driver' => 'reverb',
-            'app_id' => env('REVERB_APP_ID'),
-            'app_key' => env('REVERB_APP_KEY'),
-            'app_secret' => env('REVERB_APP_SECRET'),
-            'host' => env('REVERB_HOST', '127.0.0.1'),
-            'port' => env('REVERB_PORT', 8080),
-            'scheme' => env('REVERB_SCHEME', 'http'),
-            'useTLS' => env('REVERB_TLS', false),
-        ],
 
         'pusher' => [
             'driver' => 'pusher',
-            'key' => env('PUSHER_APP_KEY'),
-            'secret' => env('PUSHER_APP_SECRET'),
-            'app_id' => env('PUSHER_APP_ID'),
+            'key' => env('REVERB_APP_KEY', 'dummy'),
+            'secret' => env('REVERB_APP_SECRET', 'dummy'),
+            'app_id' => env('REVERB_APP_ID', 'dummy'),
             'options' => [
-                'host' => env('PUSHER_HOST', '127.0.0.1'),
-                'port' => env('PUSHER_PORT', 6001),
-                'scheme' => env('PUSHER_SCHEME', 'http'),
+                'host' => env('REVERB_HOST', '127.0.0.1'),
+                'port' => env('REVERB_PORT', 8080),
+                'scheme' => env('REVERB_SCHEME', 'http'),
                 'encrypted' => false,
-                'useTLS' => false,
+                'useTLS' => env('REVERB_TLS', false),
+                'curl_options' => [
+                    CURLOPT_SSL_VERIFYHOST => 0,
+                    CURLOPT_SSL_VERIFYPEER => 0,
+                ],
             ],
         ],
 

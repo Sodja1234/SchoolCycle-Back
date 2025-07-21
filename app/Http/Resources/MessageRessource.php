@@ -21,14 +21,14 @@ class MessageRessource extends JsonResource
             'conversation' => $this->conversation,
             'sender' => [
                 'id' => $this->sender,
-                'name' => optional($this->senderUser)->name
+                'name' => $this->senderUser ? $this->senderUser->name : 'Utilisateur supprimé'
             ],
             'receiver' => [
                 'id' => $this->receiver,
-                "name" => optional($this->receiverUser)->name
+                'name' => $this->receiverUser ? $this->receiverUser->name : 'Utilisateur supprimé'
             ],
             'content' => $this->content,
-            'created_at' => Carbon::parse($this->created_at)->format('H:i'),
+            'created_at' => $this->created_at ? Carbon::parse($this->created_at)->format('H:i') : null,
         ];
     }
 }
