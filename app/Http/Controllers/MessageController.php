@@ -55,6 +55,7 @@ class MessageController extends Controller
             'receiver' => $receiver,
             'content' => (string) $content,
         ]);
+        $message->load('senderUser');
 
         // Diffuser l'événement en temps réel
         broadcast(new MessageSent($message))->toOthers();
