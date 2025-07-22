@@ -200,6 +200,10 @@ class ChatController extends Controller
         //On retourne les messages liés à l'annonce
         $chat = $announcement->chats()->with(['messages', 'user'])->get();
 
+        if ($chat->isEmpty()) {
+            return response()->json(['error' => 'Aucun chat trouvé pour cette annonce'], 404);
+        }
+
         return ChatRessource::collection($chat);
     }
 
@@ -219,7 +223,7 @@ class ChatController extends Controller
         if (!$chat){
             return response()->json(['error' => 'Aucun chat trouvé'], 404);
         }
-        return ChatRessource::collection($chat);
+        return new ChatRessource($chat);
     }
 
     public function contactInfo(Chat $chat)
