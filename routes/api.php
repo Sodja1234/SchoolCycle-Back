@@ -57,6 +57,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/tutors/create', [TutorController::class, 'store']);
     Route::put('/tutors/update', [TutorController::class, 'update']);
     Route::delete('/tutors/delete', [TutorController::class, 'destroy']);
+    Route::post('/preferences', [TutorController::class, 'addToPreferences']);
+    Route::get('/preferences', [TutorController::class, 'getPreferences']);
+
 
     //Route pour bloquer debloquer l'utilisateur
     Route::patch('/user/toggle-status/{id}', \App\Http\Controllers\ToggleUserStatusController::class);
