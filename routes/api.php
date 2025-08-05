@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TutorController;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Hash;
 Route::middleware('auth:sanctum')->group(function () {
     //création et récupération d'un chat pour une annonce
@@ -56,6 +57,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/tutors/create', [TutorController::class, 'store']);
     Route::put('/tutors/update', [TutorController::class, 'update']);
     Route::delete('/tutors/delete', [TutorController::class, 'destroy']);
+    Route::post('/preferences', [TutorController::class, 'addToPreferences']);
+    Route::get('/preferences', [TutorController::class, 'getPreferences']);
+
 
     //Route pour bloquer debloquer l'utilisateur
     Route::patch('/user/toggle-status/{id}', \App\Http\Controllers\ToggleUserStatusController::class);
@@ -92,3 +96,8 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 
 
 require __DIR__ . '/auth.php';
+
+//Route pour l'authentification des websockets
+Route::middleware('auth:sanctum')->post('/broadcasting/auth', function (Request $request) {
+    return Broadcast::auth($request);
+});

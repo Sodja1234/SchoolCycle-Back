@@ -2,66 +2,52 @@
 
 namespace App\Events;
 
-use App\Models\Message;
-use Illuminate\Broadcasting\Channel;
-use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Queue\SerializesModels;
+use App\Models\Message;
 
-class MessageSent implements ShouldBroadcast
+class MessageSent implements ShouldBroadcastNow
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use SerializesModels;
 
     public $message;
 
-    /**
-     * Create a new event instance.
-     */
     public function __construct(Message $message)
     {
+        // Le message doit déjà être chargé avec ses relations
+        $message->load('senderUser', 'receiverUser');
         $this->message = $message;
     }
 
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
-     */
-    public function broadcastOn(): array
+    public function broadcastOn()
     {
-        // Canal privé pour le chat spécifique
-        return [
-            new PrivateChannel('chat.' . $this->message->conversation)
-        ];
+        // Canal attendu : chat.{conversation_id}
+        return new PrivateChannel('chat.' . $this->message->conversation);
     }
 
-    /**
-     * Get the data to broadcast.
-     */
-    public function broadcastWith(): array
+    public function broadcastAs()
+    {
+        return 'message.sent';
+    }
+
+    public function broadcastWith()
     {
         return [
             'id' => $this->message->id,
             'content' => $this->message->content,
             'conversation' => $this->message->conversation,
             'sender' => [
-                'id' => $this->message->sender->id,
-                'name' => $this->message->sender->name,
-                'email' => $this->message->sender->email,
+                'id' => $this->message->senderUser->id ?? null,
+                'name' => $this->message->senderUser->name ?? 'Inconnu'
             ],
-            'created_at' => $this->message->created_at->toISOString(),
-            'updated_at' => $this->message->updated_at->toISOString(),
+            'receiver' => [
+                'id' => $this->message->receiverUser->id ?? null,
+                'name' => $this->message->receiverUser->name ?? 'Inconnu'
+            ],
+            'is_read' => $this->message->is_read,
+            'created_at' => $this->message->created_at->format('H:i'),
+            'updated_at' => $this->message->updated_at->format('H:i'),
         ];
-    }
-
-    /**
-     * The event's broadcast name.
-     */
-    public function broadcastAs(): string
-    {
-        return 'message.sent';
     }
 }
