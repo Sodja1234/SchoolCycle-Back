@@ -1,0 +1,802 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "SchoolCycle API",
+        "description": "Documentation de l'API de SchoolCycle",
+        "contact": {
+            "name": "Support Team",
+            "email": "support@schoolcycle.com"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000",
+            "description": "Serveur principal"
+        }
+    ],
+    "paths": {
+        "/api/announcements": {
+            "get": {
+                "tags": [
+                    "Annonces"
+                ],
+                "summary": "Liste des annonces disponibles",
+                "operationId": "71c08f9cc8bee71c81626251da258590",
+                "responses": {
+                    "200": {
+                        "description": "Liste récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Announcement"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Annonces"
+                ],
+                "summary": "Crée une annonce",
+                "description": "security={{ \"bearerAuth\": {} }},",
+                "operationId": "dc2f49bef808056e16e168f71b8830ec",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "category_id",
+                                    "operation_type",
+                                    "state",
+                                    "exchange_location_address",
+                                    "exchange_location_lng",
+                                    "exchange_location_lat"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Titre de l'annonce"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Une description"
+                                    },
+                                    "category_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "operation_type": {
+                                        "type": "string",
+                                        "example": "vente"
+                                    },
+                                    "state": {
+                                        "type": "string",
+                                        "example": "neuf"
+                                    },
+                                    "price": {
+                                        "type": "string",
+                                        "example": "50000"
+                                    },
+                                    "exchange_location_address": {
+                                        "type": "string",
+                                        "example": "Kinshasa, Gombe"
+                                    },
+                                    "exchange_location_lng": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 15.308889
+                                    },
+                                    "exchange_location_lat": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -4.325
+                                    },
+                                    "created_by": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "photo": {
+                                        "description": "Image de l'annonce (jpg, jpeg, png, gif, 2Mo max.)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Annonce créée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Announcement"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "422": {
+                        "description": "Données invalides"
+                    }
+                }
+            }
+        },
+        "/api/announcements/single/{id}": {
+            "get": {
+                "tags": [
+                    "Annonces"
+                ],
+                "summary": "Voir les détails d'une annonce",
+                "operationId": "7d05a10ee2521544090525bff0d7374a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de l'annonce",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Annonce récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Announcement"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Annonce non trouvée"
+                    }
+                }
+            }
+        },
+        "/api/announcements/{id}": {
+            "put": {
+                "tags": [
+                    "Annonces"
+                ],
+                "summary": "Modifié une annonce",
+                "description": "security={{ \"bearerAuth\": {} }},",
+                "operationId": "a8df15398083d218b208ceabff089eb6",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "category_id",
+                                    "operation_type",
+                                    "state",
+                                    "exchange_location_address",
+                                    "exchange_location_lng",
+                                    "exchange_location_lat"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Titre de l'annonce"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Une description"
+                                    },
+                                    "category_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "operation_type": {
+                                        "type": "string",
+                                        "example": "vente"
+                                    },
+                                    "state": {
+                                        "type": "string",
+                                        "example": "neuf"
+                                    },
+                                    "price": {
+                                        "type": "string",
+                                        "example": "50000"
+                                    },
+                                    "exchange_location_address": {
+                                        "type": "string",
+                                        "example": "Kinshasa, Gombe"
+                                    },
+                                    "exchange_location_lng": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 15.308889
+                                    },
+                                    "exchange_location_lat": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -4.325
+                                    },
+                                    "created_by": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "photo": {
+                                        "description": "Image de l'annonce (jpg, jpeg, png, gif, 2Mo max.)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Annonce Modifié avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Announcement"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "422": {
+                        "description": "Données invalides"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Annonces"
+                ],
+                "summary": "Supprimer une annonce",
+                "description": "*     security={{ \"bearerAuth\": {} }},",
+                "operationId": "6e6001a5b104477475d1a70294d42ba1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de l'annonce à supprimer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Annonce supprimée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Annonce supprimée avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Non autorisé"
+                    },
+                    "404": {
+                        "description": "Annonce non trouvée"
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/get_creator_announcement": {
+            "get": {
+                "tags": [
+                    "Annonces"
+                ],
+                "summary": "Récuperé les annonces de l'utilisateur connecté",
+                "description": "* @OA\\Get(\n*     path=\"/api/get_creator_announcement\",\n    tags={\"Annonces\"},\n    summary=\"Récuperé les annonces de l'utilisateur connecté\",",
+                "operationId": "cba6ea7f34ab0a084f54bc30da06da43",
+                "responses": {
+                    "200": {
+                        "description": "Liste récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Announcement"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/announcements/{id}/similars": {
+            "get": {
+                "tags": [
+                    "Annonces"
+                ],
+                "summary": "Récuperé les annonces similaire",
+                "operationId": "993b5a48022e607ee7529ca9080a44f3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de l'annonce",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Announcement"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/annoncements/favorites": {
+            "get": {
+                "tags": [
+                    "Annonces"
+                ],
+                "summary": "Récuperé les annonces en  favoris d'un utilisateur",
+                "operationId": "db72aff45665b1f753937a3e7f403bac",
+                "responses": {
+                    "200": {
+                        "description": "Liste récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Announcement"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/categories": {
+            "get": {
+                "tags": [
+                    "Category"
+                ],
+                "summary": "Liste des categories disponibles",
+                "operationId": "3f5817a34833d0a1f4af4548dd3aeaba",
+                "responses": {
+                    "200": {
+                        "description": "Liste récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Category"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Category"
+                ],
+                "summary": "Créer une nouvelle catégorie",
+                "description": "Seul un administrateur peut créer une nouvelle catégorie. L'utilisateur doit envoyer les champs obligatoires, dont une image.",
+                "operationId": "storeCategory",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "description",
+                                    "photo"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "description": "Nom de la catégorie",
+                                        "type": "string",
+                                        "maxLength": 500
+                                    },
+                                    "description": {
+                                        "description": "Description de la catégorie",
+                                        "type": "string",
+                                        "maxLength": 600
+                                    },
+                                    "photo": {
+                                        "description": "Image de la catégorie (jpg, jpeg, png, gif, 2Mo max.)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Catégorie créée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Category"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non autorisé: seul un administrateur peut effectuer cette action"
+                    },
+                    "422": {
+                        "description": "Erreur de validation (données manquantes ou image non reçue)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/categories/{id}": {
+            "get": {
+                "tags": [
+                    "Category"
+                ],
+                "summary": "Afficher une catégorie spécifique",
+                "description": "Récupère les détails d'une catégorie en fonction de son ID.",
+                "operationId": "c68e76d323c008827a9e47398b1583de",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la catégorie",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Catégorie récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Category"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Catégorie non trouvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "La catégorie n'existe pas"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Une erreur est survenue"
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Exception message"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/categories/{id}": {
+            "put": {
+                "tags": [
+                    "Category"
+                ],
+                "summary": "Met à jour une catégorie existante",
+                "description": "Seul un administrateur peut mettre à jour une catégorie.",
+                "operationId": "updateCategory",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la catégorie à mettre à jour",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "description"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 500,
+                                        "example": "Nouvel intitulé"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "maxLength": 600,
+                                        "example": "Nouvelle description"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Catégorie mise à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Category"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non autorisé: seul un administrateur peut effectuer cette action"
+                    },
+                    "422": {
+                        "description": "Validation des données échouée"
+                    },
+                    "404": {
+                        "description": "Catégorie non trouvée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Category"
+                ],
+                "summary": "Supprime une catégorie existante",
+                "description": "Supprimer une catégorie par son ID. Seul un administrateur devrait pouvoir effectuer cette action (à gérer dans le contrôleur).",
+                "operationId": "deleteCategory",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la catégorie à supprimer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Catégorie supprimée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "Message": {
+                                            "type": "string",
+                                            "example": "[]"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non autorisé: accès refusé"
+                    },
+                    "404": {
+                        "description": "Catégorie non trouvée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Announcement": {
+                "title": "Annonce",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Sac à dos blanc"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Sac à dos blanc pour ecolier, avec trois poche "
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 750.5
+                    },
+                    "operation type": {
+                        "type": "string",
+                        "example": "evente"
+                    },
+                    "state": {
+                        "type": "string",
+                        "example": "new"
+                    },
+                    "category": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 3
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "Immobilier"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "photos": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "url": {
+                                    "type": "string",
+                                    "example": "http://example.com/photo.jpg"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "user": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 4
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "Alain Katayi"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "Category": {
+                "title": "Category",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Papeterie et feuille"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Feuille, papier,etc"
+                    },
+                    "photo": {
+                        "type": "string",
+                        "example": "image.png"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "bearerFormat": "Token",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Annonces",
+            "description": "Annonces"
+        },
+        {
+            "name": "Category",
+            "description": "Category"
+        }
+    ],
+    "security": [
+        {
+            "bearerAuth": []
+        }
+    ]
+}
