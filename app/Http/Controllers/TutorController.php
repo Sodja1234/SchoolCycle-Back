@@ -159,4 +159,43 @@ public function update(Request $request){
 
 }
 
+public function addToPreferences(Request $request){
+    
+    $user = auth()->user();
+    $categories = $user->preferences; 
+
+    $categoryIds = $request->input('category_ids', []);
+
+    if (!$user) {
+        return response()->json(['message' => 'Non authentifié'], 401);
+    }
+
+    if (!is_array($categoryIds) || empty($categoryIds)) {
+        return response()->json(['message' => 'Aucune catégorie sélectionnée'], 400);
+    }
+
+    $user->preferences()->sync($categoryIds);
+
+    return response()->json(['message' => 'Préférences mises à jour avec succès']);
 }
+
+public function getPreferences()
+{
+    $user = auth()->user();
+
+    if (!$user) {
+        return response()->json(['message' => 'Non authentifié'], 401);
+    }
+
+    // Récupérer les catégories préférées
+    $favoriteCategories = $user->preferences()->get();
+
+    return response()->json([
+        'data' => $favoriteCategories,
+        'message' => 'Catégories favorites récupérées avec succès'
+    ]);
+}
+
+
+}
+
