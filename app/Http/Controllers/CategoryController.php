@@ -40,7 +40,7 @@ class CategoryController extends Controller
  *     operationId="storeCategory",
  *     tags={"Category"},
  *     security={{"bearerAuth":{}}},
- * 
+ *
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\MediaType(
@@ -101,7 +101,7 @@ class CategoryController extends Controller
         $path = $request->file('photo')->storeAs('categories', $filename, 'public');
     } else {
         return response()->json(['error' => 'Aucune image reçue'], 422);
-    } 
+    }
         $category=Category::create([
             'name'=>$request['name'],
             'description'=>$request['description'],
@@ -276,5 +276,12 @@ class CategoryController extends Controller
 
             'Message' => "[]"
         ]);
+    }
+
+    public function getMostUsedCategories()
+    {
+        $categories_count = Category::withCount('announcements')->orderBy('announcements_count', 'desc')->limit(6)->get();
+        $categories = CategoryResource::collection($categories_count);
+        return response()->json(['data' => $categories]);
     }
 }
