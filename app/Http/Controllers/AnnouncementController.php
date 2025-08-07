@@ -44,7 +44,7 @@ class AnnouncementController extends Controller
              'user',
              'category'
          ]);
- 
+
          // Détermination du scope des annonces
          if ($userId) {
              // Cas 1: Annonces d'un utilisateur spécifique
@@ -52,14 +52,14 @@ class AnnouncementController extends Controller
          } elseif ($request->routeIs('announcements.user.index')) {
              // Cas 2: Annonces de l'utilisateur connecté
              $user = auth()->user();
- 
+
              if (!$user) {
                  return response()->json([
                      'message' => 'Accès non autorisé',
                      'error' => 'Authentification requise'
                  ], 401);
              }
- 
+
              $query->where('created_by', $user->id);
          } else {
              // Cas 3: Annonces publiques (par défaut)
@@ -67,12 +67,12 @@ class AnnouncementController extends Controller
          if ($request->filled('is_completed')) {
              $query->where('is_completed', (bool) $request->query('is_completed'));
          }
- 
+
          if ($request->filled('is_cancelled')) {
              $query->where('is_cancelled', (bool) $request->query('is_cancelled'));
          }
          }
- 
+
          // Filtre: Recherche texte (titre ou description)
          if ($request->filled('search')) {
              $search = strtolower($request->query('search'));
@@ -81,17 +81,17 @@ class AnnouncementController extends Controller
                      ->orWhereRaw('LOWER(description) LIKE ?', ['%'.$search.'%']);
              });
          }
- 
+
          // Filtre: Type d'opération (vente/don/échange)
          if ($request->filled('operation_type')) {
              $operationTypes = explode(',', $request->query('operation_type'));
- 
+
              $query->where(function($q) use ($operationTypes, $request) {
                  foreach ($operationTypes as $type) {
                      if ($type === 'sale') {
                          $q->orWhere(function($subQuery) use ($request) {
                              $subQuery->where('operation_type', 'sale');
- 
+
                              // Filtres prix pour les ventes
                              if ($request->filled('min_price')) {
                                  $subQuery->where('price', '>=', $request->query('min_price'));
@@ -106,34 +106,44 @@ class AnnouncementController extends Controller
                  }
              });
          }
- 
+
          // Filtre: État du produit
          if ($request->filled('state')) {
              $query->whereIn('state', explode(',', $request->query('state')));
          }
- 
+
          // Filtre: Statut d'achèvement ou annulation
          if ($request->filled('is_completed')) {
              $query->where('is_completed', (bool) $request->query('is_completed'));
          }
- 
+
          if ($request->filled('is_cancelled')) {
              $query->where('is_cancelled', (bool) $request->query('is_cancelled'));
          }
- 
-        if ($request->filled('deleted_at')) {
+
+         // Filtre : par noms de catégories (possibilité de plusieurs)
+         if ($request->filled('categories')) {
+             $categoryNames = explode(',', $request->query('categories'));
+
+             $query->whereHas('category', function ($q) use ($categoryNames) {
+                 $q->whereIn('name', $categoryNames);
+             });
+         }
+
+
+         if ($request->filled('deleted_at')) {
             $deleted = $request->query('deleted_at');
 
             if ($deleted === 'true') {
                 $query->onlyTrashed();
-            } 
+            }
         }
- 
+
          // Tri dynamique
          $sortField = $request->query('sort_field', 'created_at');
          $sortDirection = $request->query('sort_direction', 'desc');
          $query->orderBy($sortField, $sortDirection);
- 
+
          // Pagination et retour des résultats
          return AnnouncementResource::collection(
              $query->paginate($request->query('per_page', 12))
@@ -193,7 +203,7 @@ class AnnouncementController extends Controller
  *     scheme="bearer",
  *     bearerFormat="Token"
  * )
- 
+
  * @OA\Post(
  *     path="/api/announcements",
  *     tags={"Annonces"},
@@ -220,7 +230,7 @@ class AnnouncementController extends Controller
  *                     format="binary",
  *                     description="Image de l'annonce (jpg, jpeg, png, gif, 2Mo max.)"
  *                 )
- *         )  
+ *         )
  *        )
  *     ),
  *     @OA\Response(
@@ -263,7 +273,7 @@ class AnnouncementController extends Controller
                 'exchange_location_lng' => 'numeric',
                 'exchange_location_lat' => 'numeric',
                 'photos' => 'required|array|min:1',
-                'photos.*' => 'required|image|mimes:jpg,jpeg,png,gif|max:2048',
+                'photos.*' => 'required|image|mimes:jpg,jpeg,png,gif,webp|max:2048',
             ]);
 
             $announcement = Announcement::create([
@@ -344,7 +354,7 @@ class AnnouncementController extends Controller
  *                     format="binary",
  *                     description="Image de l'annonce (jpg, jpeg, png, gif, 2Mo max.)"
  *                 )
- *         )  
+ *         )
  *        )
  *     ),
  *     @OA\Response(
@@ -466,7 +476,7 @@ class AnnouncementController extends Controller
             ], 500);
         }
     }
-  
+
 /**
 * @OA\Get(
 *     path="/api/get_creator_announcement",
@@ -538,7 +548,7 @@ class AnnouncementController extends Controller
         $similar = Announcement::where('category_id', $announcement->category_id)
             ->where('id', '!=', $announcement->id)
             ->latest()
-            ->take(5)
+            ->take(3)
             ->get();
 
         $similar = AnnouncementResource::collection($similar);
@@ -578,5 +588,6 @@ class AnnouncementController extends Controller
 
         return AnnouncementResource::collection($announcements);
     }
+
 }
 

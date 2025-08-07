@@ -82,11 +82,12 @@ Route::middleware('auth:sanctum')->get('announcements/user', [AnnouncementContro
     ->name('announcements.user.index');
 //End ==============================================================================================================================
 
-
+Route::get('/categories/most_used', [CategoryController::class, 'getMostUsedCategories']);
 Route::apiResource('/categories', CategoryController::class)->only(['index', 'show']);
+
 //route pour recuperer les articles similaires
 Route::get('/announcements/{announcement}/similar', [AnnouncementController::class, 'getSimilarAnnoucement']);
-
+Route::get('/annoucement/{id}/categories', [AnnouncementController::class, 'getAnnouncementByCategory']);
 
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
