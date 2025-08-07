@@ -67,7 +67,7 @@ class AnnouncementController extends Controller
          if ($request->filled('is_completed')) {
              $query->where('is_completed', (bool) $request->query('is_completed'));
          }
- 
+
          if ($request->filled('is_cancelled')) {
              $query->where('is_cancelled', (bool) $request->query('is_cancelled'));
          }
@@ -121,7 +121,17 @@ class AnnouncementController extends Controller
              $query->where('is_cancelled', (bool) $request->query('is_cancelled'));
          }
 
-        if ($request->filled('deleted_at')) {
+         // Filtre : par noms de catégories (possibilité de plusieurs)
+         if ($request->filled('categories')) {
+             $categoryNames = explode(',', $request->query('categories'));
+
+             $query->whereHas('category', function ($q) use ($categoryNames) {
+                 $q->whereIn('name', $categoryNames);
+             });
+         }
+
+
+         if ($request->filled('deleted_at')) {
             $deleted = $request->query('deleted_at');
 
             if ($deleted === 'true') {
@@ -193,7 +203,7 @@ class AnnouncementController extends Controller
  *     scheme="bearer",
  *     bearerFormat="Token"
  * )
- 
+
  * @OA\Post(
  *     path="/api/announcements",
  *     tags={"Annonces"},
@@ -220,7 +230,7 @@ class AnnouncementController extends Controller
  *                     format="binary",
  *                     description="Image de l'annonce (jpg, jpeg, png, gif, 2Mo max.)"
  *                 )
- *         )  
+ *         )
  *        )
  *     ),
  *     @OA\Response(
@@ -263,7 +273,7 @@ class AnnouncementController extends Controller
                 'exchange_location_lng' => 'numeric',
                 'exchange_location_lat' => 'numeric',
                 'photos' => 'required|array|min:1',
-                'photos.*' => 'required|image|mimes:jpg,jpeg,png,gif|max:2048',
+                'photos.*' => 'required|image|mimes:jpg,jpeg,png,gif,webp|max:2048',
             ]);
 
             $announcement = Announcement::create([
@@ -344,7 +354,7 @@ class AnnouncementController extends Controller
  *                     format="binary",
  *                     description="Image de l'annonce (jpg, jpeg, png, gif, 2Mo max.)"
  *                 )
- *         )  
+ *         )
  *        )
  *     ),
  *     @OA\Response(
@@ -466,7 +476,7 @@ class AnnouncementController extends Controller
             ], 500);
         }
     }
-  
+
 /**
 * @OA\Get(
 *     path="/api/get_creator_announcement",
@@ -578,5 +588,6 @@ class AnnouncementController extends Controller
 
         return AnnouncementResource::collection($announcements);
     }
+
 }
 
